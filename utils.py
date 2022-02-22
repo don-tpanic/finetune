@@ -27,6 +27,18 @@ def load_config(config_version):
     return config
 
 
+def dict_layer2attn_size(model_name='vgg16'):
+    if model_name == 'vgg16':
+        layer2attn_size = {
+            'block1_pool': 64,
+            'block2_pool': 128,
+            'block3_pool': 256,
+            'block4_pool': 512
+        }
+        
+    return layer2attn_size
+
+
 def produce_orig_reprs(model, preprocess_func, stimulus_set, return_images=False):
     """
     Purpose:
@@ -267,6 +279,23 @@ def data_loader(config, input_shape, seed=42):
                             random_state=seed)
     print(f'[Check] Training data: {X_train.shape}')
     print(f'[Check] Validation data: {X_val.shape}')
+
+
+    # Add fake ones if finetune with low-attn
+    if config['train'] == 'finetune-with-lowAttn':
+        attn_positions = config['attn_positions'].split(',')
+        layer2attn_size = dict_layer2attn_size(
+            model_name=config['model_name']
+        )
+        X_train = [X_train]
+        X_val = [X_val]
+        for attn_position in attn_positions:
+            attn_size = layer2attn_size[attn_position]
+            fake_input = np.ones((X_train[0].shape[0], attn_size))
+            X_train.extend([fake_input])
+            fake_input = np.ones((X_val[0].shape[0], attn_size))
+            X_val.extend([fake_input])
+
     return (X_train, Y_train), (X_val, Y_val)
 
 
