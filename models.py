@@ -18,6 +18,65 @@ except ModuleNotFoundError:
 A database of all vision models
 """    
 
+
+def LayerWise_AttnOp(x, layer, config):
+    """
+    Apply attn to a specific layer. 
+
+    inputs:
+    ------- 
+        x: representation from the previous layer
+        layer: layer that attn will be applied to
+        config: provide attn settings
+    
+    return:
+    -------
+        x: post-attn representation of input x
+        fake_input: corresponding fake ones in the size of the attn layer
+    """
+    if config['attn_initializer'] == 'ones':
+            attn_initializer = tf.keras.initializers.Ones()
+    elif config['attn_initializer'] == 'ones-withNoise':
+        attn_initializer = initializers.NoisyOnes(
+            noise_level=config['noise_level'], 
+            noise_distribution=config['noise_distribution'], 
+            random_seed=config['random_seed']
+        )
+                
+    if config['low_attn_constraint'] == 'nonneg':
+        low_attn_constraint = tf.keras.constraints.NonNeg()
+        
+    if config['attn_regularizer'] == 'l1':
+        attn_regularizer = tf.keras.regularizers.l1(config['reg_strength'])
+    else:
+        attn_regularizer = None
+
+    # -------------------------------------------------------------
+    attn_size = x.shape[-1]
+    fake_input = layers.Input(
+        shape=(attn_size,),
+        name=f'fake_input_{layer.name}'
+    )
+    
+    attn_weights = AttnFactory(
+        output_dim=attn_size, 
+        input_shape=fake_input.shape,
+        name=f'attn_factory_{layer.name}',
+        initializer=attn_initializer,
+        constraint=low_attn_constraint,
+        regularizer=attn_regularizer
+    )(fake_input)
+
+    # reshape attn to be compatible.
+    attn_weights = layers.Reshape(
+        target_shape=(1, 1, attn_weights.shape[-1]),
+        name=f'reshape_attn_{layer.name}')(attn_weights)
+
+    # apply attn to prev layer output
+    x = layers.Multiply(name=f'post_attn_actv_{layer.name}')([x, attn_weights])
+    return x, fake_input
+
+
 def model_base(
         config_version,
         input_shape=(224, 224, 3),
@@ -74,8 +133,9 @@ def model_base(
     config = load_config(config_version)
     model_name = config['model_name']
 
-    # TODO: better naming?
+    # first attn layer will be applied after this layer 
     layer_begin = config['attn_positions'].split(',')[0]
+    # final attn layer will be applied after this layer
     layer_end = config['attn_positions'].split(',')[-1]
     
     actv_func = config['actv_func']
@@ -154,30 +214,12 @@ def model_base(
     # New integration with attn layers.
     elif train == 'finetune-with-lowAttn':
         
-        # attn layer settings
         attn_positions = config['attn_positions'].split(',')
-        if config['attn_initializer'] == 'ones':
-            attn_initializer = tf.keras.initializers.Ones()
-        elif config['attn_initializer'] == 'ones-withNoise':
-            attn_initializer = initializers.NoisyOnes(
-                noise_level=config['noise_level'], 
-                noise_distribution=config['noise_distribution'], 
-                random_seed=config['random_seed']
-            )
-                    
-        if config['low_attn_constraint'] == 'nonneg':
-            low_attn_constraint = tf.keras.constraints.NonNeg()
-            
-        if config['attn_regularizer'] == 'l1':
-            attn_regularizer = tf.keras.regularizers.l1(config['reg_strength'])
-        else:
-            attn_regularizer = None
+        dcnn_layers = model.layers[1:]
+        fake_inputs = []
 
         if intermediate_input is False:
-            dcnn_layers = model.layers[1:]
             x = model.input
-            fake_inputs = []
-
             for layer in dcnn_layers:
 
                 layer.trainable = False
@@ -185,30 +227,8 @@ def model_base(
 
                 # apply attn at the output of the above layer output
                 if layer.name in attn_positions:
-                    attn_size = x.shape[-1]
-
-                    fake_input = layers.Input(
-                        shape=(attn_size,),
-                        name=f'fake_input_{layer.name}'
-                    )
+                    x, fake_input = LayerWise_AttnOp(x, layer, config)
                     fake_inputs.append(fake_input)
-                    
-                    attn_weights = AttnFactory(
-                        output_dim=attn_size, 
-                        input_shape=fake_input.shape,
-                        name=f'attn_factory_{layer.name}',
-                        initializer=attn_initializer,
-                        constraint=low_attn_constraint,
-                        regularizer=attn_regularizer
-                    )(fake_input)
-
-                    # reshape attn to be compatible.
-                    attn_weights = layers.Reshape(
-                        target_shape=(1, 1, attn_weights.shape[-1]),
-                        name=f'reshape_attn_{layer.name}')(attn_weights)
-
-                    # apply attn to prev layer output
-                    x = layers.Multiply(name=f'post_attn_actv_{layer.name}')([x, attn_weights])
 
                     # The last attn layer will be connected to the final layer `PredLayer`
                     if layer.name == layer_end:
@@ -223,13 +243,10 @@ def model_base(
                 shape=layer_begin_reprs.shape[-1]
             )
 
-            # NOTE(ken) hacky
+            # NOTE(ken) hacky but needed due to initially data were saved as flattened.
             x = layers.Reshape(
                 target_shape=original_layer_begin_shape
             )(intermediate_input)
-
-            dcnn_layers = model.layers[1:]
-            fake_inputs = []
 
             ignore_layer = True
             for layer in dcnn_layers:
@@ -244,32 +261,9 @@ def model_base(
                         x = layer(x)
 
                     if layer.name in attn_positions:
-                        
-                        attn_size = x.shape[-1]
-
-                        fake_input = layers.Input(
-                            shape=(attn_size,),
-                            name=f'fake_input_{layer.name}'
-                        )
+                        x, fake_input = LayerWise_AttnOp(x, layer, config)
                         fake_inputs.append(fake_input)
                         
-                        attn_weights = AttnFactory(
-                            output_dim=attn_size, 
-                            input_shape=fake_input.shape,
-                            name=f'attn_factory_{layer.name}',
-                            initializer=attn_initializer,
-                            constraint=low_attn_constraint,
-                            regularizer=attn_regularizer
-                        )(fake_input)
-
-                        # reshape attn to be compatible.
-                        attn_weights = layers.Reshape(
-                            target_shape=(1, 1, attn_weights.shape[-1]),
-                            name=f'reshape_attn_{layer.name}')(attn_weights)
-
-                        # apply attn to prev layer output
-                        x = layers.Multiply(name=f'post_attn_actv_{layer.name}')([x, attn_weights])
-
                         # The last attn layer will be connected to the final layer `PredLayer`
                         if layer.name == layer_end:
                             x = layers.Flatten()(x)
