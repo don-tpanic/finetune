@@ -1,0 +1,73 @@
+Task1:
+------
+The original stimuli (8) have 5 features. In Mack's experiments, 3 features are used.
+In the files, a stimulus is named something like 12111 where each number corresponds to 
+one dimension being 1 or 2. For example, the first dim corresponds to legs.
+Here, we map out the index of three dims that Mack used and we will be using.
+
+1st dim = legs
+3rd dim = antenna
+4th dim = mouth
+
+So if we ignore the other two dims, the files should be named as:
+111
+112
+121
+122
+211
+212
+221
+222
+
+if we convert to binary:
+000
+001
+010
+011
+100
+101
+110
+111
+
+So in hash table, if would be:
+dict = {'12111': [0, 0, 0], 
+        '12121': [0, 0, 1],
+        '12211': [0, 1, 0],
+        '12221': [0, 1, 1],
+        '22111': [1, 0, 0],
+        '22121': [1, 0, 1],
+        '22211': [1, 1, 0],
+        '22221': [1, 1, 1]}
+This is so we can train a model with binary coding as labels.
+
+Task2-5:
+--------
+Things are a lot easier for these tasks because the 3 dimensions were explicitly binary coded.
+
+Task6:
+------
+Exception here where there are 4 features and not binary coded when provided.
+Here we explicitly map out the conversion:
+
+cgll - 0000
+cglr - 0001
+cgsl - 0010
+cgsr - 0011
+crll - 0100
+crlr - 0101
+crsl - 0110
+crsr - 0111
+
+tgll - 1000
+tglr - 1001
+tgsl - 1010
+tgsr - 1011
+trll - 1100
+trlr - 1101
+trsl - 1110
+trsr - 1111
+
+
+
+
+
