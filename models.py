@@ -216,7 +216,7 @@ def model_base(
     # ----------------------------------------------------------------------
     # New integration with attn layers.
     elif train == 'finetune-with-lowAttn':
-        
+        print(f'[Check] train = {train}')
         attn_positions = config['attn_positions'].split(',')
         dcnn_layers = model.layers[1:]
         fake_inputs = []
@@ -289,7 +289,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]= "-1"
 
     model, _, _ = model_base(
-        config_version='config_t1.vgg16.block4_pool.None.run1',
+        config_version='config_t1.vgg16.block4_pool.None.run1-with-lowAttn',
         intermediate_input=True
     )
     model.summary()
