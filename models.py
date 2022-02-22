@@ -133,10 +133,13 @@ def model_base(
     config = load_config(config_version)
     model_name = config['model_name']
 
-    # first attn layer will be applied after this layer 
-    layer_begin = config['attn_positions'].split(',')[0]
-    # final attn layer will be applied after this layer
-    layer_end = config['attn_positions'].split(',')[-1]
+    if 'lowAttn' in config_version:
+        # first attn layer will be applied after this layer 
+        layer_begin = config['attn_positions'].split(',')[0]
+        # final attn layer will be applied after this layer
+        layer_end = config['attn_positions'].split(',')[-1]
+    else:
+        layer_begin = config['layer']
     
     actv_func = config['actv_func']
     lr = config['lr']
@@ -286,7 +289,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]= "-1"
 
     model, _, _ = model_base(
-        config_version='config_t1.vgg16.block4_pool.None.run1-with-lowAttn',
+        config_version='config_t1.vgg16.block4_pool.None.run1',
         intermediate_input=True
     )
     model.summary()
