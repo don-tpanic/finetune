@@ -11,7 +11,7 @@ by iterating through a range of params.
 # lr = 0.00003      # 3e-5
 # run = 3
 # lr = 0.0003       # 3e-4
-run = 1
+run = 2
 lr = 0.003        # 3e-3
 model_name = 'vgg16'
 stimulus_sets = [1]
