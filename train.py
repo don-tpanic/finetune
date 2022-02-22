@@ -92,18 +92,9 @@ def train_model(config, intermediate_input, results_path):
     """
     # model
     model, input_shape, preprocess_func = model_base(
-        model_name=config['model_name'], 
-        actv_func=config['actv_func'],
-        kernel_constraint=config['kernel_constraint'],
-        kernel_regularizer=config['kernel_regularizer'],
-        hyperbolic_strength=config['hyperbolic_strength'],
-        lr=config['lr'],
-        train=config['train'],
-        stimulus_set=config['stimulus_set'],
-        layer=config['layer'],
+        config_version=config['config_version'],
         intermediate_input=intermediate_input
     )
-    model.summary()
 
     # data
     # when use intermediate input, load all at once.
