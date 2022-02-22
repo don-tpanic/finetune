@@ -173,7 +173,8 @@ def model_base(
 
             # regardless of attn
             # apply one layer at a time from DCNN.
-            layer.trainable = False
+            if layer.name not in ['pred']:
+                layer.trainable = False
             x = layer(x)
 
             # apply attn at the output of the above layer output
