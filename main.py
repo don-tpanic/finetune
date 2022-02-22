@@ -36,14 +36,16 @@ def main(config_version, mode, full_test, heldout_test):
     config_version = f'config_{config_version}'
     config = load_config(config_version)
 
-    preprocessed_dir = config['preprocessed_dir']
+    XY_dir = config['XY_dir']
     model_name = config['model_name']
     layer = config['layer']
     stimulus_set = config['stimulus_set']
+    first_attn_position = config['attn_positions'].split(',')[0]
+    print(f'[Check] first_attn_position = {first_attn_position}')
     
     if mode == 'train':
-        dataset_dir = f'stimuli/{preprocessed_dir}/{model_name}/' \
-                  f'{layer}_reprs/task{stimulus_set}'
+        dataset_dir = f'resources/{XY_dir}/{model_name}/' \
+                  f'{first_attn_position}/task{stimulus_set}/X.npy'
         # if no dataset, create dataset 
         if not os.path.exists(dataset_dir):
             print('[Check] Preparing dataset..')
@@ -67,12 +69,13 @@ if __name__ == '__main__':
     parser.add_argument('--gpu', dest='gpu_index')
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"]= f"{args.gpu_index}"
-
     # -------------------------------------------------------
     stimulus_sets = [args.task]
-    runs = [4]
-    layers = ['fc2', 'flatten', 'block5_conv3', 'block5_conv2', 'block5_conv1', 'block4_pool', 'block3_pool']
+    runs = [1]
+    # layers = ['fc2', 'fc1', 'flatten', 'block5_conv3', 'block5_conv2', 'block5_conv1', 'block4_pool', 'block3_pool']
+    layers = ['block4_pool']
     model_name = 'vgg16'
+    with_lowAttn = True  # finetune with low-attn
     # -------------------------------------------------------
 
     for stimulus_set in stimulus_sets:
@@ -98,7 +101,10 @@ if __name__ == '__main__':
                                 '1000', '1001', '1010', '1011',
                                 '1100', '1101', '1110', '1111', None]
                 for heldout in heldouts:
-                    config_version = f't{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}'
+                    if with_lowAttn is False:
+                        config_version = f't{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}'
+                    else:
+                        config_version = f't{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}-with-lowAttn'
                     print(f'[Check] training {config_version}')
                     main(
                         config_version=config_version, 
