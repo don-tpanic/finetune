@@ -13,7 +13,7 @@ from tensorflow.keras.preprocessing.image import load_img, img_to_array
 
 from models import model_base
 from utils import load_config, produce_orig_reprs
-from create_task6_images import load_n_resize_img, augment_img
+# from create_task6_images import load_n_resize_img, augment_img
 
 
 """
