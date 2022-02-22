@@ -11,9 +11,9 @@ augmentations:
   vertical_flip: true
 batch_size: 16
 binary_loss: BCE
-config_version: config_t1.vgg16.block4_pool.None.run1-with-lowAttn
+config_version: config_t1.vgg16.block4_pool.110.run1-with-lowAttn
 epochs: 1000
-heldout: null
+heldout: '110'
 hyperbolic_strength: null
 kernel_constraint: null
 kernel_regularizer: null

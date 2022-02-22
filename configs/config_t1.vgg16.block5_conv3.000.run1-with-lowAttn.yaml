@@ -11,13 +11,13 @@ augmentations:
   vertical_flip: true
 batch_size: 16
 binary_loss: BCE
-config_version: config_t1.vgg16.block4_pool.None.run1-with-lowAttn
+config_version: config_t1.vgg16.block5_conv3.000.run1-with-lowAttn
 epochs: 1000
-heldout: null
+heldout: '000'
 hyperbolic_strength: null
 kernel_constraint: null
 kernel_regularizer: null
-layer: block4_pool
+layer: block5_conv3
 low_attn_constraint: nonneg
 lr: 0.003
 model_name: vgg16

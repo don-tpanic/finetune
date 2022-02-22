@@ -14,7 +14,10 @@ by iterating through a range of params.
 run = 1
 lr = 0.003        # 3e-3
 model_name = 'vgg16'
-stimulus_sets = [1, 2, 3, 4, 5, 6]
+stimulus_sets = [1]
+reg_strength = 0.
+attn_positions = 'block4_pool'
+train = 'finetune-with-lowAttn'
 
 dict_task1to5 = {'config_version': None,
                 'model_name': model_name,
@@ -30,7 +33,7 @@ dict_task1to5 = {'config_version': None,
                 'run': run,
                 'task': 'binary',
                 'binary_loss': 'BCE',
-                'train': 'finetune',
+                'train': train,
                 'stimulus_set': None,
                 'heldout': None,
                 'layer': 'flatten',
@@ -41,7 +44,15 @@ dict_task1to5 = {'config_version': None,
                 'augmentations': {'rotate_range': 45,
                                   'shear_range': 15,
                                   'horizontal_flip': True,
-                                  'vertical_flip': True}}
+                                  'vertical_flip': True},
+                'low_attn_constraint': 'nonneg', 
+                'attn_initializer': 'ones',
+                'attn_regularizer': 'l1',
+                'reg_strength': reg_strength,
+                'noise_distribution': None,
+                'noise_level': None,
+                'attn_positions': attn_positions
+                }
 
 dict_task6 = {'config_version': None,
                 'model_name': 'vgg16',
@@ -72,9 +83,7 @@ dict_task6 = {'config_version': None,
                 'noise_mode': 'gaussian'
                 }
 
-layers = ['fc2', 'flatten', 
-        'block5_pool', 'block5_conv3', 'block5_conv2', 'block5_conv1',
-        'block4_pool', 'block3_pool']
+layers = ['block5_conv3', 'block4_pool']
 heldouts_task1to5 = [None,
                     '000', '001', '010', '011',
                     '100', '101', '110', '111']
@@ -106,7 +115,11 @@ for stimulus_set in stimulus_sets:
             run = default_dict['run']
             model_name = default_dict['model_name']
 
-            config_version = f'config_t{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}'
+            if train == 'finetune-with-lowAttn':
+                config_version = f'config_t{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}-with-lowAttn'
+            else:
+                config_version = f'config_t{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}'
+
             default_dict['config_version'] = config_version
 
             filepath = os.path.join(f'configs', f'{config_version}.yaml')
