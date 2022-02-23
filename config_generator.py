@@ -16,7 +16,7 @@ lr = 0.003        # 3e-3
 model_name = 'vgg16'
 stimulus_sets = [1]
 reg_strength = 0.
-attn_positions = 'block5_conv3'
+attn_positions = 'block4_pool'
 train = 'finetune-with-lowAttn'
 layers = [f'{attn_positions}']
 
@@ -34,7 +34,7 @@ dict_task1to5 = {'config_version': None,
                 'run': run,
                 'task': 'binary',
                 'binary_loss': 'BCE',
-                'train': 'finetune',
+                'train': train,
                 'stimulus_set': None,
                 'heldout': None,
                 'layer': 'flatten',
