@@ -67,9 +67,11 @@ def original_stimuli_final_coordinates(config):
         attn_positions = config['attn_positions'].split(',')
         attn_weights = np.load(f'{save_path}/attn_weights.npy', allow_pickle=True)
         attn_weights = attn_weights.ravel()[0]
+        reg_strength = config['reg_strength']
 
         for attn_position in attn_positions:
             layer_attn_weights = attn_weights[attn_position]
+            print(f'attn weights (attn_position), l1={reg_strength} = \n{layer_attn_weights}')
             model.get_layer(
                 f'attn_factory_{attn_position}').set_weights([layer_attn_weights])
             print(f'[Check] have set attn weights after {attn_position}')
