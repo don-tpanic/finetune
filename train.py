@@ -199,7 +199,10 @@ def save_model(model, config, results_path):
                 model.get_layer(
                     f'attn_factory_{attn_position}').get_weights()[0]
             attn_weights[attn_position] = layer_attn_weights
-            print(f'[Check] attn weights post {attn_position} saved.')
+
+        np.save(f'{save_path}/attn_weights.npy', attn_weights)
+        print(f'[Check] attn weights saved.')
+
     
     else:
         NotImplementedError()
