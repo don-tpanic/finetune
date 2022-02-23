@@ -40,7 +40,13 @@ def dict_layer2attn_size(model_name='vgg16'):
     return layer2attn_size
 
 
-def produce_orig_reprs(model, preprocess_func, stimulus_set, return_images=False):
+def produce_orig_reprs(
+        model, 
+        preprocess_func, 
+        stimulus_set, 
+        return_images=False, 
+        config=None
+    ):
     """
     Purpose:
     --------
@@ -85,8 +91,36 @@ def produce_orig_reprs(model, preprocess_func, stimulus_set, return_images=False
             batch_size=batch_size,
             class_mode='sparse',
             shuffle=False)
-    if return_images is False: 
-        reprs = model.predict(generator)
+    if return_images is False:
+
+        if config is None:
+            reprs = model.predict(generator)
+
+        else: 
+            if 'lowAttn' in config['config_version']:
+                
+                # TODO: very hacky...
+                # intercept generator and add fake inputs:
+                for x in next(generator):
+                    print('len of x = ', len(x))
+                    attn_positions = config['attn_positions'].split(',')
+                    layer2attn_size = dict_layer2attn_size(
+                        model_name=config['model_name']
+                    )
+                    print('x.shape', x.shape)
+                    x = [x]
+                    for attn_position in attn_positions:
+                        attn_size = layer2attn_size[attn_position]
+                        fake_input = np.ones((x[0].shape[0], attn_size))
+                        x.extend([fake_input])
+                    print('x[0], x[1]', x[0].shape, x[1].shape)
+                    break  # WTF why next call twice and second time looks like are the labels?
+                
+                reprs = model.predict(x)
+
+            else:
+                NotImplementedError()
+
     else:
         reprs, _ = next(generator)
 
