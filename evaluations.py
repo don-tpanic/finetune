@@ -85,6 +85,18 @@ def original_stimuli_final_coordinates(config):
             pred_weights = pickle.load(f)
         model.get_layer('pred').set_weights(pred_weights)
         print(f'[Check] pred_weights loaded.')
+    
+    elif config['train'] == 'finetune-with-lowAttn':
+        with open(os.path.join(save_path, 'pred_weights.pkl'), 'rb') as f:
+            pred_weights = pickle.load(f)
+        model.get_layer('pred').set_weights(pred_weights)
+        print(f'[Check] pred_weights loaded.')
+
+
+        print(f'warning: attn needs to be loaded too.')
+        print(f'warning: attn needs to be loaded too.')
+        print(f'warning: attn needs to be loaded too.')
+
 
     # Load original images and grab reprs
     # (n, d) e.g. (8, 3) or (16, 4)

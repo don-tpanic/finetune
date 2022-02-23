@@ -203,6 +203,9 @@ def model_base(
     # NOTE: For backward compatibility
     # (where layer_begin directly connects to pred)
     elif train == 'finetune':
+
+        print(f'[Check] train = {train}')
+
         if intermediate_input is False:
             output = PredLayer(layer_begin_reprs)  # flattened.
             model = Model(inputs=model.input, outputs=output)
@@ -210,13 +213,23 @@ def model_base(
             intermediate_input = layers.Input(
                 shape=layer_begin_reprs.shape[-1]
             )
-            output = PredLayer(intermediate_input)
+
+            # x = layers.Reshape(
+            #     target_shape=original_layer_begin_shape
+            # )(intermediate_input)
+            # x = layers.Flatten()(x)
+            # output = PredLayer(x)
+            # NOTE: confirmed that Reshape-Flatten will not cause problem.
+
+            # output = PredLayer(intermediate_input)
             model = Model(inputs=intermediate_input, outputs=output)
 
     # ----------------------------------------------------------------------
     # New integration with attn layers.
     elif train == 'finetune-with-lowAttn':
+
         print(f'[Check] train = {train}')
+
         attn_positions = config['attn_positions'].split(',')
         dcnn_layers = model.layers[1:]
         fake_inputs = []
@@ -251,39 +264,32 @@ def model_base(
                 target_shape=original_layer_begin_shape
             )(intermediate_input)
 
-            layer = model.get_layer(f'block4_pool')
-
-            x, fake_input = LayerWise_AttnOp(x, layer, config)
-            fake_inputs.append(fake_input)
-            x = layers.Flatten()(x)
-            x = PredLayer(x)
-
-            # ignore_layer = True
-            # for layer in dcnn_layers:
+            ignore_layer = True
+            for layer in dcnn_layers:
                 
-            #     if layer.name != layer_begin and ignore_layer:
-            #         continue
-            #     else:
-            #         ignore_layer = False  # permanently set flag for the rest.
-            #         layer.trainable = False
+                if layer.name != layer_begin and ignore_layer:
+                    continue
+                else:
+                    ignore_layer = False  # permanently set flag for the rest.
+                    layer.trainable = False
 
-            #         if layer.name != layer_begin:
-            #             x = layer(x)
+                    if layer.name != layer_begin:
+                        x = layer(x)
 
-            #         if layer.name in attn_positions:
-            #             x, fake_input = LayerWise_AttnOp(x, layer, config)
-            #             fake_inputs.append(fake_input)
+                    if layer.name in attn_positions:
+                        x, fake_input = LayerWise_AttnOp(x, layer, config)
+                        fake_inputs.append(fake_input)
                         
-            #             # The last attn layer will be connected to the final layer `PredLayer`
-            #             if layer.name == layer_end:
-            #                 x = layers.Flatten()(x)
-            #                 x = PredLayer(x)
-            #                 break
+                        # The last attn layer will be connected to the final layer `PredLayer`
+                        if layer.name == layer_end:
+                            x = layers.Flatten()(x)
+                            output = PredLayer(x)
+                            break
 
             inputs = [intermediate_input]
 
         inputs.extend(fake_inputs)
-        model = Model(inputs=inputs, outputs=x, name='dcnn_model')
+        model = Model(inputs=inputs, outputs=output, name='dcnn_model')
 
     model.compile(
         tf.keras.optimizers.Adam(lr=lr),
