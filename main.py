@@ -67,18 +67,19 @@ def main(config_version, mode, full_test, heldout_test):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', dest='mode')
-    parser.add_argument('--task', dest='task')
-    parser.add_argument('--gpu', dest='gpu_index')
+    parser.add_argument('-m', '--mode', dest='mode')
+    parser.add_argument('-t', '--task', dest='task', default='1')
+    parser.add_argument('-g', '--gpu', dest='gpu_index')
+    parser.add_argument('-a', '--attn', dest='with_lowAttn', default=None)
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"]= f"{args.gpu_index}"
     # -------------------------------------------------------
     stimulus_sets = [args.task]
     runs = [1]
     # layers = ['fc2', 'fc1', 'flatten', 'block5_conv3', 'block5_conv2', 'block5_conv1', 'block4_pool', 'block3_pool']
-    layers = ['block4_pool']
+    layers = ['block4_pool', 'block5_conv3']
     model_name = 'vgg16'
-    with_lowAttn = True  # finetune with low-attn
+    with_lowAttn = args.with_lowAttn  # finetune with low-attn
     # -------------------------------------------------------
 
     for stimulus_set in stimulus_sets:
@@ -104,7 +105,7 @@ if __name__ == '__main__':
                                 '1000', '1001', '1010', '1011',
                                 '1100', '1101', '1110', '1111', None]
                 for heldout in heldouts:
-                    if with_lowAttn is False:
+                    if with_lowAttn is None:
                         config_version = f't{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}'
                     else:
                         config_version = f't{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}-with-lowAttn'
