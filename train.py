@@ -95,6 +95,7 @@ def train_model(config, intermediate_input, results_path):
         config_version=config['config_version'],
         intermediate_input=intermediate_input
     )
+    model.summary()
 
     # data
     # when use intermediate input, load all at once.
@@ -181,6 +182,15 @@ def save_model(model, config, results_path):
             with open(os.path.join(save_path, 'pred_weights.pkl'), 'wb') as f:
                 pickle.dump(pred_weights, f)
         print('[Check] pred_weights saved.')
+
+    elif config['train'] == 'finetune-with-lowAttn':
+        pred_weights = model.get_layer('pred').get_weights()
+        with open(os.path.join(save_path, 'pred_weights.pkl'), 'wb') as f:
+            pickle.dump(pred_weights, f)
+
+        # TODO: save multiple attn weights
+        # attn_weights = model.get_layer(f'')
+    
     else:
         # if fulltrain, need to save the entire model.
         model.save(os.path.join(save_path, 'model_weights'))
