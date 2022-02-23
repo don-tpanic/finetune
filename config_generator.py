@@ -11,14 +11,22 @@ by iterating through a range of params.
 # lr = 0.00003      # 3e-5
 # run = 3
 # lr = 0.0003       # 3e-4
-run = 1
-lr = 0.003        # 3e-3
+# run = 4
+# lr = 0.003        # 3e-3
+# NOTE: before finetune-with-lowAttn, each run corresponds
+# to a different learning rate indicated above.
+# NOTE: for finetune-with-lowAttn, as we tune L1 too, 
+# the above shouldn't be used.
+# --------------------------------------------------------
+
 model_name = 'vgg16'
 stimulus_sets = [1]
-reg_strength = 0.
+learning_rates = [0.003]
+reg_strengths = [0.1, 0.01, 0.001, 0.0001]
 attn_positions = 'block4_pool'
 train = 'finetune-with-lowAttn'
 layers = [f'{attn_positions}']
+
 
 dict_task1to5 = {'config_version': None,
                 'model_name': model_name,
@@ -27,11 +35,11 @@ dict_task1to5 = {'config_version': None,
                 'kernel_constraint': None, 
                 'kernel_regularizer': None,
                 'hyperbolic_strength': None,
-                'lr': lr,
+                'lr': 0.,
                 'batch_size': 16,
                 'epochs': 1000,
                 'patience': 20,
-                'run': run,
+                'run': 0,
                 'task': 'binary',
                 'binary_loss': 'BCE',
                 'train': train,
@@ -49,7 +57,7 @@ dict_task1to5 = {'config_version': None,
                 'low_attn_constraint': 'nonneg', 
                 'attn_initializer': 'ones',
                 'attn_regularizer': 'l1',
-                'reg_strength': reg_strength,
+                'reg_strength': 0.,
                 'noise_distribution': None,
                 'noise_level': None,
                 'attn_positions': attn_positions
@@ -62,11 +70,11 @@ dict_task6 = {'config_version': None,
                 'kernel_constraint': None, 
                 'kernel_regularizer': None,
                 'hyperbolic_strength': None,
-                'lr': lr,
+                'lr': 0.,
                 'batch_size': 16,
                 'epochs': 1000,
                 'patience': 20,
-                'run': run,
+                'run': 0.,
                 'task': 'binary',
                 'binary_loss': 'BCE',
                 'train': 'finetune',
@@ -94,6 +102,7 @@ heldouts_task6 = [None,
                 '1000', '1001', '1010', '1011',
                 '1100', '1101', '1110', '1111']
 
+
 for stimulus_set in stimulus_sets:
 
     # if task1-5, use the same default
@@ -106,24 +115,37 @@ for stimulus_set in stimulus_sets:
         heldouts = heldouts_task6
 
     default_dict['stimulus_set'] = stimulus_set
+    model_name = default_dict['model_name']
 
     for layer in layers:
         default_dict['layer'] = layer
 
         for heldout in heldouts:
             default_dict['heldout'] = heldout
-            run = default_dict['run']
-            model_name = default_dict['model_name']
+            
+            ###################################
+            run = 1  # reset or continue 
+            ###################################
+            # hyper-params.
+            # lr 
+            # reg_strength
+            for lr in learning_rates:
+                for reg_strength in reg_strengths:
+                    default_dict['run'] = run
+                    default_dict['lr'] = lr
+                    default_dict['reg_strength'] = reg_strength
 
-            if train == 'finetune-with-lowAttn':
-                config_version = f'config_t{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}-with-lowAttn'
-            else:
-                config_version = f'config_t{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}'
+                    if train == 'finetune-with-lowAttn':
+                        config_version = f'config_t{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}-with-lowAttn'
+                    else:
+                        config_version = f'config_t{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}'
 
-            default_dict['config_version'] = config_version
+                    default_dict['config_version'] = config_version
 
-            filepath = os.path.join(f'configs', f'{config_version}.yaml')
-            with open(filepath, 'w') as yaml_file:
-                yaml.dump(default_dict, yaml_file, default_flow_style=False)
+                    filepath = os.path.join(f'configs', f'{config_version}.yaml')
+                    with open(filepath, 'w') as yaml_file:
+                        yaml.dump(default_dict, yaml_file, default_flow_style=False)
+                    
+                    run += 1
 
 

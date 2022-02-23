@@ -11,7 +11,7 @@ augmentations:
   vertical_flip: true
 batch_size: 16
 binary_loss: BCE
-config_version: config_t1.vgg16.block4_pool.None.run2-with-lowAttn
+config_version: config_t1.vgg16.block4_pool.None.run3-with-lowAttn
 epochs: 1000
 heldout: null
 hyperbolic_strength: null
@@ -25,8 +25,8 @@ noise_distribution: null
 noise_level: null
 patience: 20
 preprocessed_dir: v3
-reg_strength: 0.01
-run: 2
+reg_strength: 0.001
+run: 3
 size_per_class: 1023
 split_ratio: 0.2
 stimulus_set: 1
