@@ -106,23 +106,19 @@ def produce_orig_reprs(
             if 'lowAttn' in config['config_version']:
                 # NOTE: Very hacky.. but good for one-time use.
                 # intercept generator and add fake inputs:
-                for x in next(generator):
-                    print('len of x = ', len(x))
-                    attn_positions = config['attn_positions'].split(',')
-                    layer2attn_size = dict_layer2attn_size(
-                        model_name=config['model_name']
-                    )
-                    print('x.shape', x.shape)
-                    x = [x]
-                    for attn_position in attn_positions:
-                        attn_size = layer2attn_size[attn_position]
-                        fake_input = np.ones((x[0].shape[0], attn_size))
-                        x.extend([fake_input])
-                    print('x[0], x[1]', x[0].shape, x[1].shape)
-                    break  
-                    # WTF: why next call twice and second time looks like are the labels?
-                    # HACK: just break after one iteration where we will get the images.
-                
+                x, _ = next(generator)
+                print('len of x = ', len(x))
+                attn_positions = config['attn_positions'].split(',')
+                layer2attn_size = dict_layer2attn_size(
+                    model_name=config['model_name']
+                )
+                print('x.shape', x.shape)
+                x = [x]
+                for attn_position in attn_positions:
+                    attn_size = layer2attn_size[attn_position]
+                    fake_input = np.ones((x[0].shape[0], attn_size))
+                    x.extend([fake_input])
+                print('x[0], x[1]', x[0].shape, x[1].shape)                
                 reprs = model.predict(x)
 
             else:
