@@ -192,7 +192,7 @@ def save_model(model, config, results_path):
         print('[Check] pred_weights saved.')
 
         # save attn layers weights as .npy (to be consistent with JointModel)
-        attn_positions = config['attn_positions']
+        attn_positions = config['attn_positions'].split(',')
         attn_weights = {}
         for attn_position in attn_positions:
             layer_attn_weights = \
