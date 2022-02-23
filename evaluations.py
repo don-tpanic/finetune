@@ -1,8 +1,4 @@
 import os
-# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
-# os.environ["CUDA_VISIBLE_DEVICES"]= "1"
-# os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
-
 import pickle
 import argparse
 import numpy as np 
@@ -81,7 +77,7 @@ def original_stimuli_final_coordinates(config):
     # Load original images and grab reprs
     # (n, d) e.g. (8, 3) or (16, 4)
 
-    # TODO: hacky as hell...
+    # NOTE: hacky way to be compatible when finetuned with low-attn.
     if 'lowAttn' not in config['config_version']:
         reprs, _ = produce_orig_reprs(
             model=model, 

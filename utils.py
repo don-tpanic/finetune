@@ -91,15 +91,20 @@ def produce_orig_reprs(
             batch_size=batch_size,
             class_mode='sparse',
             shuffle=False)
+
+    # When not needing images but intermediate outputs
+    # given the model specified (capped at some layer already)
     if return_images is False:
 
         if config is None:
+            # When config is not provided, it's 
+            # the default mode where there is no attn finetuned
+            # hence no need for fake input branch(es)
             reprs = model.predict(generator)
 
         else: 
             if 'lowAttn' in config['config_version']:
-                
-                # TODO: very hacky...
+                # NOTE: Very hacky.. but good for one-time use.
                 # intercept generator and add fake inputs:
                 for x in next(generator):
                     print('len of x = ', len(x))
@@ -114,11 +119,14 @@ def produce_orig_reprs(
                         fake_input = np.ones((x[0].shape[0], attn_size))
                         x.extend([fake_input])
                     print('x[0], x[1]', x[0].shape, x[1].shape)
-                    break  # WTF why next call twice and second time looks like are the labels?
+                    break  
+                    # WTF: why next call twice and second time looks like are the labels?
+                    # HACK: just break after one iteration where we will get the images.
                 
                 reprs = model.predict(x)
 
             else:
+                # just to catch some unintended calls..
                 NotImplementedError()
 
     else:
