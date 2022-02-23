@@ -51,7 +51,7 @@ class AttnFactory(Layer):
             initializer=self.initializer,
             constraint=self.constraint,
             regularizer=self.regularizer,
-            trainable=False)
+            trainable=True)
         super(AttnFactory, self).build(input_shape)
 
     def call(self, x):
