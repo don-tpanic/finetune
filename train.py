@@ -166,10 +166,11 @@ def train_model(config, intermediate_input, results_path):
 
 def save_model(model, config, results_path):
     """
-    Impl:
-    ----
-        If finetune: save partial weights.
-        If fulltrain: save entire model.
+    if train == 'finetune': 
+        save pred layer weights 
+
+    if train == 'finetune-with-lowAttn': 
+        save pred layer weights and attn weights
     """
     # make sure directory exists for the trained models.
     save_path = f'{results_path}/trained_weights'
@@ -177,24 +178,31 @@ def save_model(model, config, results_path):
         os.mkdir(save_path) 
 
     if config['train'] == 'finetune':
-        if config['task'] == 'binary':
-            pred_weights = model.get_layer('pred').get_weights()
-            with open(os.path.join(save_path, 'pred_weights.pkl'), 'wb') as f:
-                pickle.dump(pred_weights, f)
-        print('[Check] pred_weights saved.')
-
-    elif config['train'] == 'finetune-with-lowAttn':
+        # save pred layer weights as .pkl
         pred_weights = model.get_layer('pred').get_weights()
         with open(os.path.join(save_path, 'pred_weights.pkl'), 'wb') as f:
             pickle.dump(pred_weights, f)
+        print('[Check] pred_weights saved.')
 
-        # TODO: save multiple attn weights
-        # attn_weights = model.get_layer(f'')
+    elif config['train'] == 'finetune-with-lowAttn':
+        # save pred layer weights as .pkl
+        pred_weights = model.get_layer('pred').get_weights()
+        with open(os.path.join(save_path, 'pred_weights.pkl'), 'wb') as f:
+            pickle.dump(pred_weights, f)
+        print('[Check] pred_weights saved.')
+
+        # save attn layers weights as .npy (to be consistent with JointModel)
+        attn_positions = config['attn_positions']
+        attn_weights = {}
+        for attn_position in attn_positions:
+            layer_attn_weights = \
+                model.get_layer(
+                    f'attn_factory_{attn_position}').get_weights()[0]
+            attn_weights[attn_position] = layer_attn_weights
+            print(f'[Check] attn weights post {attn_position} saved.')
     
     else:
-        # if fulltrain, need to save the entire model.
-        model.save(os.path.join(save_path, 'model_weights'))
-        print('[Check] full model saved.')
+        NotImplementedError()
     del model
     K.clear_session()
     
