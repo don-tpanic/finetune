@@ -249,7 +249,7 @@ def model_base(
                     # The last attn layer will be connected to the final layer `PredLayer`
                     if layer.name == layer_end:
                         x = layers.Flatten()(x)
-                        x = PredLayer(x)
+                        output = PredLayer(x)
                         break
 
             inputs = [model.inputs]
