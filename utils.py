@@ -33,7 +33,8 @@ def dict_layer2attn_size(model_name='vgg16'):
             'block1_pool': 64,
             'block2_pool': 128,
             'block3_pool': 256,
-            'block4_pool': 512
+            'block4_pool': 512,
+            'block5_conv3': 512,
         }
         
     return layer2attn_size
