@@ -251,27 +251,34 @@ def model_base(
                 target_shape=original_layer_begin_shape
             )(intermediate_input)
 
-            ignore_layer = True
-            for layer in dcnn_layers:
+            layer = model.get_layer(f'block4_pool')
+
+            x, fake_input = LayerWise_AttnOp(x, layer, config)
+            fake_inputs.append(fake_input)
+            x = layers.Flatten()(x)
+            x = PredLayer(x)
+
+            # ignore_layer = True
+            # for layer in dcnn_layers:
                 
-                if layer.name != layer_begin and ignore_layer:
-                    continue
-                else:
-                    ignore_layer = False  # permanently set flag for the rest.
-                    layer.trainable = False
+            #     if layer.name != layer_begin and ignore_layer:
+            #         continue
+            #     else:
+            #         ignore_layer = False  # permanently set flag for the rest.
+            #         layer.trainable = False
 
-                    if layer.name != layer_begin:
-                        x = layer(x)
+            #         if layer.name != layer_begin:
+            #             x = layer(x)
 
-                    if layer.name in attn_positions:
-                        x, fake_input = LayerWise_AttnOp(x, layer, config)
-                        fake_inputs.append(fake_input)
+            #         if layer.name in attn_positions:
+            #             x, fake_input = LayerWise_AttnOp(x, layer, config)
+            #             fake_inputs.append(fake_input)
                         
-                        # The last attn layer will be connected to the final layer `PredLayer`
-                        if layer.name == layer_end:
-                            x = layers.Flatten()(x)
-                            x = PredLayer(x)
-                            break
+            #             # The last attn layer will be connected to the final layer `PredLayer`
+            #             if layer.name == layer_end:
+            #                 x = layers.Flatten()(x)
+            #                 x = PredLayer(x)
+            #                 break
 
             inputs = [intermediate_input]
 
