@@ -35,7 +35,7 @@ def LayerWise_AttnOp(x, layer, config):
         fake_input: corresponding fake ones in the size of the attn layer
     """
     if config['attn_initializer'] == 'ones':
-            attn_initializer = tf.keras.initializers.Ones()
+        attn_initializer = tf.keras.initializers.Ones()
     elif config['attn_initializer'] == 'ones-withNoise':
         attn_initializer = initializers.NoisyOnes(
             noise_level=config['noise_level'], 
