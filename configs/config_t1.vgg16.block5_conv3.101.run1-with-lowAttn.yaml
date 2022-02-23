@@ -1,7 +1,7 @@
 XY_dir: v3-binary
 actv_func: sigmoid
 attn_initializer: ones
-attn_positions: block4_pool
+attn_positions: block5_conv3
 attn_regularizer: l1
 augment_seed: 42
 augmentations:
@@ -31,4 +31,4 @@ size_per_class: 1023
 split_ratio: 0.2
 stimulus_set: 1
 task: binary
-train: finetune-with-lowAttn
+train: finetune

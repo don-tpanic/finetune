@@ -11,13 +11,14 @@ by iterating through a range of params.
 # lr = 0.00003      # 3e-5
 # run = 3
 # lr = 0.0003       # 3e-4
-run = 2
+run = 1
 lr = 0.003        # 3e-3
 model_name = 'vgg16'
 stimulus_sets = [1]
 reg_strength = 0.
-attn_positions = 'block4_pool'
+attn_positions = 'block5_conv3'
 train = 'finetune-with-lowAttn'
+layers = [f'{attn_positions}']
 
 dict_task1to5 = {'config_version': None,
                 'model_name': model_name,
@@ -33,7 +34,7 @@ dict_task1to5 = {'config_version': None,
                 'run': run,
                 'task': 'binary',
                 'binary_loss': 'BCE',
-                'train': train,
+                'train': 'finetune',
                 'stimulus_set': None,
                 'heldout': None,
                 'layer': 'flatten',
@@ -83,7 +84,6 @@ dict_task6 = {'config_version': None,
                 'noise_mode': 'gaussian'
                 }
 
-layers = ['block5_conv3', 'block4_pool']
 heldouts_task1to5 = [None,
                     '000', '001', '010', '011',
                     '100', '101', '110', '111']
