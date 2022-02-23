@@ -40,12 +40,15 @@ def main(config_version, mode, full_test, heldout_test):
     model_name = config['model_name']
     layer = config['layer']
     stimulus_set = config['stimulus_set']
-    first_attn_position = config['attn_positions'].split(',')[0]
-    print(f'[Check] first_attn_position = {first_attn_position}')
+
+    if 'lowAttn' in config_version:
+        first_attn_position = config['attn_positions'].split(',')[0]
+        print(f'[Check] first_attn_position = {first_attn_position}')
+        layer = first_attn_position
     
     if mode == 'train':
         dataset_dir = f'resources/{XY_dir}/{model_name}/' \
-                  f'{first_attn_position}/task{stimulus_set}/X.npy'
+                  f'{layer}/task{stimulus_set}/X.npy'
         # if no dataset, create dataset 
         if not os.path.exists(dataset_dir):
             print('[Check] Preparing dataset..')
