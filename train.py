@@ -146,7 +146,8 @@ def train_model(config, intermediate_input, results_path):
                 workers=10,
                 use_multiprocessing=False,
                 steps_per_epoch=train_steps,
-                validation_steps=val_steps)
+                validation_steps=val_steps,
+                verbose=2)
     else:
         model.fit(
                 x=train_data, 
