@@ -1,0 +1,34 @@
+XY_dir: v3-binary
+actv_func: sigmoid
+attn_initializer: ones
+attn_positions: block4_pool
+attn_regularizer: l1
+augment_seed: 42
+augmentations:
+  horizontal_flip: true
+  rotate_range: 45
+  shear_range: 15
+  vertical_flip: true
+batch_size: 16
+binary_loss: BCE
+config_version: config_t1.vgg16.block4_pool.101.run20-with-lowAttn
+epochs: 1000
+heldout: '101'
+hyperbolic_strength: null
+kernel_constraint: null
+kernel_regularizer: null
+layer: block4_pool
+low_attn_constraint: nonneg
+lr: 3.0e-05
+model_name: vgg16
+noise_distribution: null
+noise_level: null
+patience: 20
+preprocessed_dir: v3
+reg_strength: 0.0001
+run: 20
+size_per_class: 1023
+split_ratio: 0.2
+stimulus_set: 1
+task: binary
+train: finetune-with-lowAttn
