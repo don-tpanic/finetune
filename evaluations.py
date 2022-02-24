@@ -72,6 +72,8 @@ def original_stimuli_final_coordinates(config):
         for attn_position in attn_positions:
             layer_attn_weights = attn_weights[attn_position]
             print(f'attn weights (attn_position), l1={reg_strength} = \n{layer_attn_weights}')
+            nonzero_percentage = len(np.nonzero(layer_attn_weights)[0]) / len(layer_attn_weights)
+            print(f'nonzero_percentage = {nonzero_percentage}')
             model.get_layer(
                 f'attn_factory_{attn_position}').set_weights([layer_attn_weights])
             print(f'[Check] have set attn weights after {attn_position}')
