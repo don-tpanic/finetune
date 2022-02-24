@@ -47,7 +47,7 @@ def original_stimuli_final_coordinates(config):
     stimulus_set = config['stimulus_set']
 
     model, _, preprocess_func = model_base(config_version=config_version)
-    model.summary()
+    # model.summary()
 
     # load the trained prediction layer weights.
     save_path = f'results/{model_name}/{config_version}/trained_weights'
@@ -55,14 +55,14 @@ def original_stimuli_final_coordinates(config):
         with open(os.path.join(save_path, 'pred_weights.pkl'), 'rb') as f:
             pred_weights = pickle.load(f)
         model.get_layer('pred').set_weights(pred_weights)
-        print(f'[Check] pred_weights loaded.')
+        # print(f'[Check] pred_weights loaded.')
     
     # load both trained pred layer weights and attn weights.
     elif config['train'] == 'finetune-with-lowAttn':
         with open(os.path.join(save_path, 'pred_weights.pkl'), 'rb') as f:
             pred_weights = pickle.load(f)
         model.get_layer('pred').set_weights(pred_weights)
-        print(f'[Check] pred_weights loaded.')
+        # print(f'[Check] pred_weights loaded.')
 
         attn_positions = config['attn_positions'].split(',')
         attn_weights = np.load(f'{save_path}/attn_weights.npy', allow_pickle=True)
@@ -71,12 +71,12 @@ def original_stimuli_final_coordinates(config):
 
         for attn_position in attn_positions:
             layer_attn_weights = attn_weights[attn_position]
-            print(f'attn weights (attn_position), l1={reg_strength} = \n{layer_attn_weights}')
+            # print(f'attn weights (attn_position), l1={reg_strength} = \n{layer_attn_weights}')
             nonzero_percentage = len(np.nonzero(layer_attn_weights)[0]) / len(layer_attn_weights)
-            print(f'nonzero_percentage = {nonzero_percentage}')
+            print(f'l1={reg_strength}, nonzero_percentage = {nonzero_percentage}')
             model.get_layer(
                 f'attn_factory_{attn_position}').set_weights([layer_attn_weights])
-            print(f'[Check] have set attn weights after {attn_position}')
+            # print(f'[Check] have set attn weights after {attn_position}')
 
     # Load original images and grab reprs
     # (n, d) e.g. (8, 3) or (16, 4)
@@ -100,9 +100,9 @@ def original_stimuli_final_coordinates(config):
     
     reprs = np.matrix.round(reprs, 2)
     heldout = config['heldout']
-    print(f'\nheldout = {heldout}')
-    print(reprs)
-    print('----------------------\n')
+    # print(f'\nheldout = {heldout}')
+    # print(reprs)
+    # print('----------------------\n')
     return reprs
 
 
@@ -156,7 +156,7 @@ def write_reprs_to_table(reprs, config, full_test, heldout_test):
             score = 0
         heldout_test[layer].append(score)
             
-    print(f'[Results] heldout={heldout}, layer={layer}, score={score}')
+    # print(f'[Results] heldout={heldout}, layer={layer}, score={score}')
     
     
     

@@ -71,15 +71,19 @@ if __name__ == '__main__':
     parser.add_argument('-t', '--task', dest='task', default='1')
     parser.add_argument('-g', '--gpu', dest='gpu_index')
     parser.add_argument('-a', '--attn', dest='with_lowAttn', default=None)
+    parser.add_argument('-b', '--run_begin', dest='run_begin', type=int)
+    parser.add_argument('-e', '--run_end', dest='run_end', type=int)
+
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"]= f"{args.gpu_index}"
-    # -------------------------------------------------------
     stimulus_sets = [args.task]
-    runs = [1]
-    # layers = ['fc2', 'fc1', 'flatten', 'block5_conv3', 'block5_conv2', 'block5_conv1', 'block4_pool', 'block3_pool']
-    layers = ['block4_pool', 'block5_conv3']
-    model_name = 'vgg16'
     with_lowAttn = args.with_lowAttn  # finetune with low-attn
+    
+    # -------------------------------------------------------
+    runs = range(args.run_begin, args.run_end+1)
+    # layers = ['fc2', 'fc1', 'flatten', 'block5_conv3', 'block5_conv2', 'block5_conv1', 'block4_pool', 'block3_pool']
+    layers = ['block4_pool']
+    model_name = 'vgg16'
     # -------------------------------------------------------
 
     for stimulus_set in stimulus_sets:

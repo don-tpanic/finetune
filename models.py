@@ -204,7 +204,7 @@ def model_base(
     # (where layer_begin directly connects to pred)
     elif train == 'finetune':
 
-        print(f'[Check] train = {train}')
+        # print(f'[Check] train = {train}')
 
         if intermediate_input is False:
             output = PredLayer(layer_begin_reprs)  # flattened.
@@ -228,7 +228,7 @@ def model_base(
     # New integration with attn layers.
     elif train == 'finetune-with-lowAttn':
 
-        print(f'[Check] train = {train}')
+        # print(f'[Check] train = {train}')
 
         attn_positions = config['attn_positions'].split(',')
         dcnn_layers = model.layers[1:]
