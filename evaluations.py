@@ -22,13 +22,23 @@ we have achieved sensible representations of the stimuli from DCNN
 using whatever approach which would enable us to move onto the next step.
 """
 
-def execute(config_version, full_test=None, heldout_test=None):
+def execute(
+        config_version, 
+        full_test=None, 
+        heldout_test=None, 
+        nonzero_percentage_dict=None
+    ):
     config = load_config(config_version)
-    reprs = original_stimuli_final_coordinates(config)
+    reprs, nonzero_percentage = original_stimuli_final_coordinates(config)
     
     # only for visual comparison of layers.
     if full_test is not None:
-        write_reprs_to_table(reprs, config, full_test, heldout_test)
+        write_reprs_to_table(
+            reprs, 
+            config, 
+            full_test, heldout_test, 
+            nonzero_percentage_dict, nonzero_percentage
+        )
         
     return reprs
 
@@ -103,10 +113,14 @@ def original_stimuli_final_coordinates(config):
     # print(f'\nheldout = {heldout}')
     # print(reprs)
     # print('----------------------\n')
-    return reprs
+    return reprs, nonzero_percentage
 
 
-def write_reprs_to_table(reprs, config, full_test, heldout_test):
+def write_reprs_to_table(
+        reprs, config, 
+        full_test, heldout_test,
+        nonzero_percentage_dict, nonzero_percentage
+    ):
     """
     Automating script that writes predicted reprs (binary codings)
     across layers into one table for easy comparison.
@@ -114,6 +128,10 @@ def write_reprs_to_table(reprs, config, full_test, heldout_test):
     heldout = config['heldout']
     layer = config['layer']
     stimulus_set = config['stimulus_set']
+    run = config['run']
+
+    nonzero_percentage_dict[run][layer].append(nonzero_percentage)
+
     if stimulus_set not in ['6', 6]:
         y_trues = ['000', '001', '010', '011',
                     '100', '101', '110', '111']
@@ -136,7 +154,7 @@ def write_reprs_to_table(reprs, config, full_test, heldout_test):
             if diff > 0.1:
                 score = 0
                 break
-        full_test[layer].append(score)
+        full_test[run][layer].append(score)
             
     # if heldout, just check the heldout
     else:
@@ -154,8 +172,7 @@ def write_reprs_to_table(reprs, config, full_test, heldout_test):
         diff = np.sum(np.abs(y_true - y_pred))
         if diff > 0.1:
             score = 0
-        heldout_test[layer].append(score)
-            
+        heldout_test[run][layer].append(score)
     # print(f'[Results] heldout={heldout}, layer={layer}, score={score}')
     
     

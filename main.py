@@ -25,7 +25,7 @@ One script does it all.
         -- evaluations.py
 """
 
-def main(config_version, mode, full_test, heldout_test):
+def main(config_version, mode, full_test, heldout_test, nonzero_percentage_dict):
     """
     inputs:
     -------
@@ -61,7 +61,9 @@ def main(config_version, mode, full_test, heldout_test):
         evaluations.execute(
             config_version, 
             full_test, 
-            heldout_test)
+            heldout_test, 
+            nonzero_percentage_dict
+        )
     K.clear_session()
 
 
@@ -88,13 +90,14 @@ if __name__ == '__main__':
 
     for stimulus_set in stimulus_sets:
 
+        # for eval easy comparison.
+        full_test = defaultdict(lambda: defaultdict(list))
+        heldout_test = defaultdict(lambda: defaultdict(list))
+        nonzero_percentage_dict = defaultdict(lambda: defaultdict(list))
+
         for run in runs:
             # get sum of runtime for all heldouts per layer
             layer_runtime_collector = []
-
-            # for eval easy comparison.
-            full_test = defaultdict(list)
-            heldout_test = defaultdict(list)
             
             for layer in layers:
                 # restart timer for a new layer
@@ -118,7 +121,8 @@ if __name__ == '__main__':
                         config_version=config_version, 
                         mode=args.mode,
                         full_test=full_test,
-                        heldout_test=heldout_test
+                        heldout_test=heldout_test,
+                        nonzero_percentage_dict=nonzero_percentage_dict
                     )
                     
                 if args.mode == 'train':
@@ -131,11 +135,26 @@ if __name__ == '__main__':
                         f'results/{model_name}/config_{config_version}/{layer}_runtime_collector.npy', 
                         layer_runtime_collector
                     )
-                
-            if args.mode == 'eval':
+        
+        # Formatted output for examination.
+        if args.mode == 'eval':
+            for run in runs:
                 for layer in layers:
+            
+                    # For same run, params same, so just use None.
+                    if with_lowAttn is None:
+                        config_version = f'config_t{stimulus_set}.{model_name}.{layer}.None.run{run}'
+                    else:
+                        config_version = f'config_t{stimulus_set}.{model_name}.{layer}.None.run{run}-with-lowAttn'
+
+                    config = load_config(config_version)
+                    lr = config['lr']
+                    reg_strength = config['reg_strength']
                     print(
+                        f'------------------------------------------'
+                        f'\nrun={run}, lr={lr}, l1={reg_strength}\n '
                         f'layer=[{layer}], ' \
-                        f'full=[{np.mean(full_test[layer]):.4f}], ' \
-                        f'heldout=[{np.mean(heldout_test[layer]):.4f}]'
+                        f'full=[{np.mean(full_test[run][layer]):.4f}], ' \
+                        f'heldout=[{np.mean(heldout_test[run][layer]):.4f}], ' \
+                        f'nonzero%={nonzero_percentage_dict[run][layer]}'
                     )
