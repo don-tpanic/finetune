@@ -108,7 +108,7 @@ def produce_orig_reprs(
                 # intercept generator and add fake inputs:
                 x, _ = next(generator)
                 # print('len of x = ', len(x))
-                attn_positions = config['attn_positions'].split(',')
+                attn_positions = config['low_attn_positions'].split(',')
                 layer2attn_size = dict_layer2attn_size(
                     model_name=config['dcnn_base']
                 )

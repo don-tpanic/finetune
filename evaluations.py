@@ -56,7 +56,7 @@ def original_stimuli_final_coordinates(config):
     dcnn_base = config['dcnn_base']
     stimulus_set = config['stimulus_set']
 
-    model, _, preprocess_func = model_base(config_version=config_version)
+    model, _, preprocess_func = model_base(config=config)
     # model.summary()
 
     # load the trained prediction layer weights.
