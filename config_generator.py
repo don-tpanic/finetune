@@ -19,27 +19,24 @@ by iterating through a range of params.
 # the above shouldn't be used.
 # --------------------------------------------------------
 
-model_name = 'vgg16'
+dcnn_base = 'vgg16'
 stimulus_sets = [1]
 learning_rates = [3e-6]
 reg_strengths = [0.1, 0.01, 0.001, 0.0001, 1e-5, 1e-6, 1e-7, 0]
-attn_positions = 'block4_pool'
+low_attn_positions = 'block4_pool'
 train = 'finetune-with-lowAttn'
-layers = [f'{attn_positions}']
+layers = [f'{low_attn_positions}']
 
 
 dict_task1to5 = {'config_version': None,
-                'model_name': model_name,
+                'dcnn_base': dcnn_base,
                 'split_ratio': 0.2,
-                'actv_func': 'sigmoid',
-                'kernel_constraint': None, 
-                'kernel_regularizer': None,
-                'hyperbolic_strength': None,
-                'lr': 0.,
+                'dcnn_actv_func': 'sigmoid',
+                'lr_finetune': 0.,
                 'batch_size': 16,
                 'epochs': 1000,
                 'patience': 20,
-                'run': 0,
+                'finetune_run': 0,
                 'task': 'binary',
                 'binary_loss': 'BCE',
                 'train': train,
@@ -55,26 +52,23 @@ dict_task1to5 = {'config_version': None,
                                   'horizontal_flip': True,
                                   'vertical_flip': True},
                 'low_attn_constraint': 'nonneg', 
-                'attn_initializer': 'ones',
-                'attn_regularizer': 'l1',
+                'low_attn_initializer': 'ones',
+                'low_attn_regularizer': 'l1',
                 'reg_strength': 0.,
                 'noise_distribution': None,
                 'noise_level': None,
-                'attn_positions': attn_positions
+                'low_attn_positions': low_attn_positions
                 }
 
 dict_task6 = {'config_version': None,
-                'model_name': 'vgg16',
+                'dcnn_base': dcnn_base,
                 'split_ratio': 0.2,
-                'actv_func': 'sigmoid',
-                'kernel_constraint': None, 
-                'kernel_regularizer': None,
-                'hyperbolic_strength': None,
-                'lr': 0.,
+                'dcnn_actv_func': 'sigmoid',
+                'lr_finetune': 0.,
                 'batch_size': 16,
                 'epochs': 1000,
                 'patience': 20,
-                'run': 0.,
+                'finetune_run': 0.,
                 'task': 'binary',
                 'binary_loss': 'BCE',
                 'train': 'finetune',
@@ -115,7 +109,7 @@ for stimulus_set in stimulus_sets:
         heldouts = heldouts_task6
 
     default_dict['stimulus_set'] = stimulus_set
-    model_name = default_dict['model_name']
+    dcnn_base = default_dict['dcnn_base']
 
     for layer in layers:
         default_dict['layer'] = layer
@@ -131,14 +125,14 @@ for stimulus_set in stimulus_sets:
             # reg_strength
             for lr in learning_rates:
                 for reg_strength in reg_strengths:
-                    default_dict['run'] = run
-                    default_dict['lr'] = lr
+                    default_dict['finetune_run'] = run
+                    default_dict['lr_finetune'] = lr
                     default_dict['reg_strength'] = reg_strength
 
                     if train == 'finetune-with-lowAttn':
-                        config_version = f'config_t{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}-with-lowAttn'
+                        config_version = f'config_t{stimulus_set}.{dcnn_base}.{layer}.{heldout}.run{run}-with-lowAttn'
                     else:
-                        config_version = f'config_t{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}'
+                        config_version = f'config_t{stimulus_set}.{dcnn_base}.{layer}.{heldout}.run{run}'
 
                     default_dict['config_version'] = config_version
 
