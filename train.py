@@ -25,8 +25,8 @@ Training logic for a given model.
 
 def execute(config_version, intermediate_input=True):
     config = load_config(config_version)
-    model_name = config['model_name']
-    results_path = f'results/{model_name}/{config_version}'
+    dcnn_base = config['dcnn_base']
+    results_path = f'results/{dcnn_base}/{config_version}'
     if os.path.exists(results_path) is False:
         os.makedirs(results_path)
 
@@ -92,7 +92,7 @@ def train_model(config, intermediate_input, results_path):
     """
     # model
     model, input_shape, preprocess_func = model_base(
-        config_version=config['config_version'],
+        config=config,
         intermediate_input=intermediate_input
     )
     model.summary()
@@ -193,7 +193,7 @@ def save_model(model, config, results_path):
         print('[Check] pred_weights saved.')
 
         # save attn layers weights as .npy (to be consistent with JointModel)
-        attn_positions = config['attn_positions'].split(',')
+        attn_positions = config['low_attn_positions'].split(',')
         attn_weights = {}
         for attn_position in attn_positions:
             layer_attn_weights = \
