@@ -37,12 +37,12 @@ def main(config_version, mode, full_test, heldout_test, nonzero_percentage_dict)
     config = load_config(config_version)
 
     XY_dir = config['XY_dir']
-    model_name = config['model_name']
+    model_name = config['dcnn_base']
     layer = config['layer']
     stimulus_set = config['stimulus_set']
 
     if 'lowAttn' in config_version:
-        first_attn_position = config['attn_positions'].split(',')[0]
+        first_attn_position = config['low_attn_positions'].split(',')[0]
         print(f'[Check] first_attn_position = {first_attn_position}')
         layer = first_attn_position
     
@@ -148,7 +148,7 @@ if __name__ == '__main__':
                         config_version = f'config_t{stimulus_set}.{model_name}.{layer}.None.run{run}-with-lowAttn'
 
                     config = load_config(config_version)
-                    lr = config['lr']
+                    lr = config['lr_finetune']
                     reg_strength = config['reg_strength']
                     print(
                         f'------------------------------------------'

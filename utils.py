@@ -110,7 +110,7 @@ def produce_orig_reprs(
                 # print('len of x = ', len(x))
                 attn_positions = config['attn_positions'].split(',')
                 layer2attn_size = dict_layer2attn_size(
-                    model_name=config['model_name']
+                    model_name=config['dcnn_base']
                 )
                 # print('x.shape', x.shape)
                 x = [x]
@@ -167,14 +167,14 @@ def data_loader(config, input_shape, seed=42):
     XY_dir = config['XY_dir']
     stimulus_set = config['stimulus_set']
     split_ratio = config['split_ratio']
-    model_name = config['model_name']
+    dcnn_base = config['dcnn_base']
     layer = config['layer']
 
     # we only stack the data once, once saved we can load off the disk.
-    if os.path.exists(f'resources/{XY_dir}/{model_name}/{layer}/task{stimulus_set}/X.npy'):
-        print(f'[Check] Loading pre-saved X and Y from {XY_dir}/{model_name}/{layer}/task{stimulus_set}/')
-        X = np.load(f'resources/{XY_dir}/{model_name}/{layer}/task{stimulus_set}/X.npy')
-        Y = np.load(f'resources/{XY_dir}/{model_name}/{layer}/task{stimulus_set}/Y.npy')
+    if os.path.exists(f'resources/{XY_dir}/{dcnn_base}/{layer}/task{stimulus_set}/X.npy'):
+        print(f'[Check] Loading pre-saved X and Y from {XY_dir}/{dcnn_base}/{layer}/task{stimulus_set}/')
+        X = np.load(f'resources/{XY_dir}/{dcnn_base}/{layer}/task{stimulus_set}/X.npy')
+        Y = np.load(f'resources/{XY_dir}/{dcnn_base}/{layer}/task{stimulus_set}/Y.npy')
         print(f'[Check] X, Y shape = {X.shape}, {Y.shape}')
 
     # first time, we stack and save dataset into disk.
@@ -217,7 +217,7 @@ def data_loader(config, input_shape, seed=42):
         mapping = orig2binary
 
         preprocessed_dir = config['preprocessed_dir']
-        data_dir = f'stimuli/{preprocessed_dir}/{model_name}/{layer}_reprs/task{stimulus_set}/'
+        data_dir = f'stimuli/{preprocessed_dir}/{dcnn_base}/{layer}_reprs/task{stimulus_set}/'
         print(f'[Check] Stacking reprs from {data_dir}')
         for stimulus_type in sorted(os.listdir(data_dir)):
             print(f'[Check] Stacking stimulus [{stimulus_type}]')
@@ -234,10 +234,10 @@ def data_loader(config, input_shape, seed=42):
         print(f'[Check] Y.shape={Y.shape}')
 
         # save the stacked dataset
-        if not os.path.exists(f'resources/{XY_dir}/{model_name}/{layer}/task{stimulus_set}'):
-            os.makedirs(f'resources/{XY_dir}/{model_name}/{layer}/task{stimulus_set}')
-        np.save(f'resources/{XY_dir}/{model_name}/{layer}/task{stimulus_set}/X.npy', X)
-        np.save(f'resources/{XY_dir}/{model_name}/{layer}/task{stimulus_set}/Y.npy', Y)
+        if not os.path.exists(f'resources/{XY_dir}/{dcnn_base}/{layer}/task{stimulus_set}'):
+            os.makedirs(f'resources/{XY_dir}/{dcnn_base}/{layer}/task{stimulus_set}')
+        np.save(f'resources/{XY_dir}/{dcnn_base}/{layer}/task{stimulus_set}/X.npy', X)
+        np.save(f'resources/{XY_dir}/{dcnn_base}/{layer}/task{stimulus_set}/Y.npy', Y)
         print('[Check] saved X, Y.')
 
 
@@ -322,9 +322,9 @@ def data_loader(config, input_shape, seed=42):
 
     # Add fake ones if finetune with low-attn
     if config['train'] == 'finetune-with-lowAttn':
-        attn_positions = config['attn_positions'].split(',')
+        attn_positions = config['low_attn_positions'].split(',')
         layer2attn_size = dict_layer2attn_size(
-            model_name=config['model_name']
+            model_name=config['dcnn_base']
         )
         X_train = [X_train]
         X_val = [X_val]
@@ -342,9 +342,9 @@ def data_loader_gen(config, preprocess_func, shuffle, seed=42):
     """Use generator as data loader for training"""
 
     preprocessed_dir = config['preprocessed_dir']
-    model_name = config['model_name']
+    dcnn_base = config['dcnn_base']
     stimulus_set = config['stimulus_set']
-    directory = f'stimuli/{preprocessed_dir}/{model_name}/processed_imgs/task{stimulus_set}'
+    directory = f'stimuli/{preprocessed_dir}/{dcnn_base}/processed_imgs/task{stimulus_set}'
 
     # TODO. Not ideal but does the trick of loading .npy images
     # from `gen.py`
@@ -392,9 +392,9 @@ def data_loader_gen_v2(config, preprocess_func, shuffle, seed=42):
     Use generator as data loader for training
     """
     preprocessed_dir = config['preprocessed_dir']
-    model_name = config['model_name']
+    dcnn_base = config['dcnn_base']
     stimulus_set = config['stimulus_set']
-    directory = f'stimuli/{preprocessed_dir}/{model_name}/processed_imgs/task{stimulus_set}'
+    directory = f'stimuli/{preprocessed_dir}/{dcnn_base}/processed_imgs/task{stimulus_set}'
     heldout_class = config['heldout']
 
     if stimulus_set not in ['6', 6]:

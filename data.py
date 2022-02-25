@@ -47,7 +47,7 @@ def execute(config):
     print(f'[Check] save_as_imgs = {save_as_imgs}\n')
 
     model, _, preprocess_func = model_base(
-        model_name=config['model_name'], 
+        dcnn_base=config['dcnn_base'], 
         layer=config['layer'], 
         train='none',
     )  
@@ -55,7 +55,7 @@ def execute(config):
     if config['stimulus_set'] not in [6, '6']:
         save_processed_data(model=model, 
                             config=config,
-                            model_name=config['model_name'], 
+                            dcnn_base=config['dcnn_base'], 
                             preprocess_func=preprocess_func, 
                             size_per_class=config['size_per_class'],
                             augment_seed=config['augment_seed'],
@@ -76,7 +76,7 @@ def execute(config):
 
 
 def save_processed_data(model, config,
-                        model_name, 
+                        dcnn_base, 
                         preprocess_func, 
                         size_per_class, 
                         augment_seed,
@@ -107,7 +107,7 @@ def save_processed_data(model, config,
     -------
         model: Model that will produce activations from one layer before fc2.
         config: ..
-        model_name: ..
+        dcnn_base: ..
         preprocess_func: ..
         size_per_class: total number of data-points per class
         augment_seed: random seed for data augmentation
@@ -194,7 +194,7 @@ def save_processed_data(model, config,
             ftype = 'processed_imgs'
 
         for i in range(x.shape[0]):
-            folder_path = f'stimuli/{preprocessed_dir}/{model_name}/{ftype}/task{stimulus_set}/{classes[i]}'
+            folder_path = f'stimuli/{preprocessed_dir}/{dcnn_base}/{ftype}/task{stimulus_set}/{classes[i]}'
             if os.path.exists(folder_path) is False:
                 os.makedirs(folder_path)
 
@@ -254,10 +254,10 @@ def save_processed_data_54(model, config, preprocess_func):
     image_path_parent = 'stimuli/task6_all_v3'   # save augmented images (bg added).
 
     preprocessed_dir = config['preprocessed_dir']
-    model_name = config['model_name']
+    dcnn_base = config['dcnn_base']
     layer = config['layer']
     stimulus_set = config['stimulus_set']
-    reprs_path_parent = f'stimuli/{preprocessed_dir}/{model_name}/{layer}_reprs/task{stimulus_set}'
+    reprs_path_parent = f'stimuli/{preprocessed_dir}/{dcnn_base}/{layer}_reprs/task{stimulus_set}'
     shrink_rates = np.linspace(
                         config['min_shrink_rate'], 
                         config['max_shrink_rate'], 

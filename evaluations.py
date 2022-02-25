@@ -53,14 +53,14 @@ def original_stimuli_final_coordinates(config):
     """
     # Load model achitecture.
     config_version = config['config_version']
-    model_name = config['model_name']
+    dcnn_base = config['dcnn_base']
     stimulus_set = config['stimulus_set']
 
     model, _, preprocess_func = model_base(config_version=config_version)
     # model.summary()
 
     # load the trained prediction layer weights.
-    save_path = f'results/{model_name}/{config_version}/trained_weights'
+    save_path = f'results/{dcnn_base}/{config_version}/trained_weights'
     if config['train'] == 'finetune':
         with open(os.path.join(save_path, 'pred_weights.pkl'), 'rb') as f:
             pred_weights = pickle.load(f)
@@ -74,7 +74,7 @@ def original_stimuli_final_coordinates(config):
         model.get_layer('pred').set_weights(pred_weights)
         # print(f'[Check] pred_weights loaded.')
 
-        attn_positions = config['attn_positions'].split(',')
+        attn_positions = config['low_attn_positions'].split(',')
         attn_weights = np.load(f'{save_path}/attn_weights.npy', allow_pickle=True)
         attn_weights = attn_weights.ravel()[0]
         reg_strength = config['reg_strength']
@@ -128,7 +128,7 @@ def write_reprs_to_table(
     heldout = config['heldout']
     layer = config['layer']
     stimulus_set = config['stimulus_set']
-    run = config['run']
+    run = config['finetune_run']
 
     nonzero_percentage_dict[run][layer].append(nonzero_percentage)
 

@@ -34,9 +34,9 @@ def LayerWise_AttnOp(x, layer, config):
         x: post-attn representation of input x
         fake_input: corresponding fake ones in the size of the attn layer
     """
-    if config['attn_initializer'] == 'ones':
+    if config['low_attn_initializer'] == 'ones':
         attn_initializer = tf.keras.initializers.Ones()
-    elif config['attn_initializer'] == 'ones-withNoise':
+    elif config['low_attn_initializer'] == 'ones-withNoise':
         attn_initializer = initializers.NoisyOnes(
             noise_level=config['noise_level'], 
             noise_distribution=config['noise_distribution'], 
@@ -46,7 +46,7 @@ def LayerWise_AttnOp(x, layer, config):
     if config['low_attn_constraint'] == 'nonneg':
         low_attn_constraint = tf.keras.constraints.NonNeg()
         
-    if config['attn_regularizer'] == 'l1':
+    if config['low_attn_regularizer'] == 'l1':
         attn_regularizer = tf.keras.regularizers.l1(config['reg_strength'])
     else:
         attn_regularizer = None
@@ -78,7 +78,7 @@ def LayerWise_AttnOp(x, layer, config):
 
 
 def model_base(
-        config_version,
+        config,
         input_shape=(224, 224, 3),
         intermediate_input=False,
     ):
@@ -88,8 +88,8 @@ def model_base(
 
     inputs:
     -------
-        config_version: will load the following:
-            model_name: vgg16 / vgg19 / resnet50
+        config: will load the following:
+            dcnn_base: vgg16 / vgg19 / resnet50
 
             layer: where to intercept representations 
             (NOTE the first attn layer will be applied to the output of this layer,
@@ -97,9 +97,9 @@ def model_base(
 
             input_shape=(224, 224, 3),
 
-            actv_func: prediction layer only, default `sigmoid`
+            dcnn_actv_func: prediction layer only, default `sigmoid`
 
-            lr: default `3e-5`
+            lr_finetune: default `3e-5`
 
             train: finetune / finetune-with-lowAttn
 
@@ -130,23 +130,23 @@ def model_base(
         reprs_dims: the size of intercepted model (flattened)
         preprocess_func: model-specific preprocessing routine
     """
-    config = load_config(config_version)
-    model_name = config['model_name']
+    dcnn_base = config['dcnn_base']
+    config_version = config['config_version']
 
     if 'lowAttn' in config_version:
         # first attn layer will be applied after this layer 
-        layer_begin = config['attn_positions'].split(',')[0]
+        layer_begin = config['low_attn_positions'].split(',')[0]
         # final attn layer will be applied after this layer
-        layer_end = config['attn_positions'].split(',')[-1]
+        layer_end = config['low_attn_positions'].split(',')[-1]
     else:
         layer_begin = config['layer']
     
-    actv_func = config['actv_func']
-    lr = config['lr']
+    actv_func = config['dcnn_actv_func']
+    lr = config['lr_finetune']
     train = config['train']
     stimulus_set = config['stimulus_set']
 
-    if model_name == 'vgg16':
+    if dcnn_base == 'vgg16':
         model = tf.keras.applications.VGG16(
             weights='imagenet', 
             include_top=True, 
@@ -154,7 +154,7 @@ def model_base(
         )
         preprocess_func = tf.keras.applications.vgg16.preprocess_input
 
-    elif model_name == 'vgg19':
+    elif dcnn_base == 'vgg19':
         model = tf.keras.applications.VGG19(
             weights='imagenet', 
             include_top=True, 
@@ -162,7 +162,7 @@ def model_base(
         )
         preprocess_func = tf.keras.applications.vgg19.preprocess_input
     
-    elif model_name == 'resnet50':
+    elif dcnn_base == 'resnet50':
         model = tf.keras.applications.ResNet50(
             weights='imagenet', 
             include_top=True, 
@@ -230,7 +230,7 @@ def model_base(
 
         # print(f'[Check] train = {train}')
 
-        attn_positions = config['attn_positions'].split(',')
+        attn_positions = config['low_attn_positions'].split(',')
         dcnn_layers = model.layers[1:]
         fake_inputs = []
 
@@ -301,8 +301,9 @@ def model_base(
 if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]= "-1"
 
+    config_version = 'config_t1.vgg16.block4_pool.None.run1-with-lowAttn'
     model, _, _ = model_base(
-        config_version='config_t1.vgg16.block4_pool.None.run1-with-lowAttn',
+        config,
         intermediate_input=True
     )
     model.summary()
