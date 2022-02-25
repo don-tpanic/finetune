@@ -1,8 +1,4 @@
 XY_dir: v3-binary
-actv_func: sigmoid
-attn_initializer: ones
-attn_positions: block4_pool
-attn_regularizer: l1
 augment_seed: 42
 augmentations:
   horizontal_flip: true
@@ -12,21 +8,22 @@ augmentations:
 batch_size: 16
 binary_loss: BCE
 config_version: config_t1.vgg16.block4_pool.000.run2-with-lowAttn
+dcnn_actv_func: sigmoid
+dcnn_base: vgg16
 epochs: 1000
+finetune_run: 2
 heldout: '000'
-hyperbolic_strength: null
-kernel_constraint: null
-kernel_regularizer: null
 layer: block4_pool
 low_attn_constraint: nonneg
-lr: 0.003
-model_name: vgg16
+low_attn_initializer: ones
+low_attn_positions: block4_pool
+low_attn_regularizer: l1
+lr_finetune: 0.003
 noise_distribution: null
 noise_level: null
 patience: 20
 preprocessed_dir: v3
 reg_strength: 0.01
-run: 2
 size_per_class: 1023
 split_ratio: 0.2
 stimulus_set: 1

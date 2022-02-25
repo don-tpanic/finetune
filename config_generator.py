@@ -21,7 +21,7 @@ by iterating through a range of params.
 
 dcnn_base = 'vgg16'
 stimulus_sets = [1]
-learning_rates = [3e-6]
+learning_rates = [3e-3, 3e-4, 3e-5, 3e-6]
 reg_strengths = [0.1, 0.01, 0.001, 0.0001, 1e-5, 1e-6, 1e-7, 0]
 low_attn_positions = 'block4_pool'
 train = 'finetune-with-lowAttn'
@@ -118,7 +118,7 @@ for stimulus_set in stimulus_sets:
             default_dict['heldout'] = heldout
             
             ###################################
-            run = 25  # reset or continue 
+            run = 1  # reset or continue 
             ###################################
             # hyper-params.
             # lr 
