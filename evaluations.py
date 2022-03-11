@@ -26,10 +26,10 @@ def execute(
         config_version, 
         full_test=None, 
         heldout_test=None, 
-        nonzero_percentage_dict=None
+        zero_percent_dict=None
     ):
     config = load_config(config_version)
-    reprs, nonzero_percentage = original_stimuli_final_coordinates(config)
+    reprs, zero_percent = original_stimuli_final_coordinates(config)
     
     # only for visual comparison of layers.
     if full_test is not None:
@@ -37,7 +37,7 @@ def execute(
             reprs, 
             config, 
             full_test, heldout_test, 
-            nonzero_percentage_dict, nonzero_percentage
+            zero_percent_dict, zero_percent
         )
         
     return reprs
@@ -82,8 +82,10 @@ def original_stimuli_final_coordinates(config):
         for attn_position in attn_positions:
             layer_attn_weights = attn_weights[attn_position]
             # print(f'attn weights (attn_position), l1={reg_strength} = \n{layer_attn_weights}')
-            nonzero_percentage = len(np.nonzero(layer_attn_weights)[0]) / len(layer_attn_weights)
-            print(f'l1={reg_strength}, nonzero_percentage = {nonzero_percentage}')
+            zero_percent = 1 - (
+                len(np.nonzero(layer_attn_weights)[0]) / len(layer_attn_weights)
+            )
+            print(f'l1={reg_strength}, zero_percent = {zero_percent}')
             model.get_layer(
                 f'attn_factory_{attn_position}').set_weights([layer_attn_weights])
             # print(f'[Check] have set attn weights after {attn_position}')
@@ -113,13 +115,13 @@ def original_stimuli_final_coordinates(config):
     # print(f'\nheldout = {heldout}')
     # print(reprs)
     # print('----------------------\n')
-    return reprs, nonzero_percentage
+    return reprs, zero_percent
 
 
 def write_reprs_to_table(
         reprs, config, 
         full_test, heldout_test,
-        nonzero_percentage_dict, nonzero_percentage
+        zero_percent_dict, zero_percent
     ):
     """
     Automating script that writes predicted reprs (binary codings)
@@ -130,7 +132,7 @@ def write_reprs_to_table(
     stimulus_set = config['stimulus_set']
     run = config['finetune_run']
 
-    nonzero_percentage_dict[run][layer].append(nonzero_percentage)
+    zero_percent_dict[run][layer].append(zero_percent)
 
     if stimulus_set not in ['6', 6]:
         y_trues = ['000', '001', '010', '011',
