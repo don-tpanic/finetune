@@ -46,7 +46,10 @@ def between_zero_percent_and_hyperparams():
     # l1
     order = np.argsort(all_reg_strength)
     all_reg_strength = np.array(all_reg_strength)[order]
-    ax[0].plot(np.array(all_zero_percent)[order])
+    ax[0].scatter(
+        range(len(all_zero_percent)),
+        np.array(all_zero_percent)[order]
+    )
     ax[0].set_xlabel('L1 strength')
     ax[0].set_ylabel('percentage zero')
     ax[0].set_xticks(np.arange(len(all_reg_strength)))
@@ -56,11 +59,15 @@ def between_zero_percent_and_hyperparams():
             np.log(all_reg_strength), 1
         ), rotation='90'
     )
+    ax[0].grid(True)
 
     # lr
     order = np.argsort(all_lr_finetune)
     all_lr_finetune = np.array(all_lr_finetune)[order]
-    ax[1].plot(np.array(all_zero_percent)[order])
+    ax[1].scatter(
+        range(len(all_zero_percent)), 
+        np.array(all_zero_percent)[order]
+    )
     ax[1].set_xlabel('learning rate')
     ax[1].set_ylabel('percentage zero')
     ax[1].set_xticks(np.arange(len(all_lr_finetune)))
@@ -70,6 +77,7 @@ def between_zero_percent_and_hyperparams():
             np.log(all_lr_finetune), 1
         ), rotation='90'
     )
+    ax[1].grid(True)
 
     plt.tight_layout()
     plt.savefig('zero_percent_l1_n_lr.png')
