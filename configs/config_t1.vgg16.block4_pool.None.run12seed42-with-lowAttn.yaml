@@ -1,0 +1,31 @@
+XY_dir: v3-binary
+augment_seed: 42
+augmentations:
+  horizontal_flip: true
+  rotate_range: 45
+  shear_range: 15
+  vertical_flip: true
+batch_size: 16
+binary_loss: BCE
+config_version: config_t1.vgg16.block4_pool.None.run12seed42-with-lowAttn
+dcnn_actv_func: sigmoid
+dcnn_base: vgg16
+epochs: 1000
+finetune_run: 12seed42
+heldout: null
+layer: block4_pool
+low_attn_constraint: nonneg
+low_attn_initializer: ones
+low_attn_positions: block4_pool
+low_attn_regularizer: l1
+lr_finetune: 0.0003
+noise_distribution: null
+noise_level: null
+patience: 20
+preprocessed_dir: v3
+reg_strength: 0.0001
+size_per_class: 1023
+split_ratio: 0.2
+stimulus_set: 1
+task: binary
+train: finetune-with-lowAttn
