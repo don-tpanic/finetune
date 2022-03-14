@@ -18,7 +18,7 @@ def between_zero_percent_and_hyperparams():
     attention weights after finetuning with L1 strength
     and learning rates (two hyper-params during finetune-lowAttn)
     """
-    runs = range(1, 33)
+    runs = range(1, 45)
     all_lr_finetune = []
     all_reg_strength = []
     all_zero_percent = []
@@ -130,6 +130,6 @@ def pred_stability():
     
 
 if __name__ == '__main__':
-    os.environ["CUDA_VISIBLE_DEVICES"]= f"0"
+    os.environ["CUDA_VISIBLE_DEVICES"]= f"-1"
     between_zero_percent_and_hyperparams()
 
