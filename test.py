@@ -83,7 +83,6 @@ def between_zero_percent_and_hyperparams():
     plt.savefig('zero_percent_l1_n_lr.png')
 
 
-
 def finetuned_lowAttn(config_version):
     config = load_config(config_version=config_version)
     dcnn_base = config['dcnn_base']
@@ -113,8 +112,8 @@ def pred_stability():
             '100', '101', '110', '111', None]
     for test in tests:
 
-        dcnn_config_version1 = f't1.vgg16.block4_pool.{test}.run3'
-        dcnn_config_version2 = f't1.vgg16.block4_pool.{test}.run4'
+        dcnn_config_version1 = f't1.vgg16.block4_pool.{test}.run5seed42-with-lowAttn'
+        dcnn_config_version2 = f't1.vgg16.block4_pool.{test}.run5seed42repeat1-with-lowAttn'
 
         dcnn_save_path1 = f'results/vgg16/config_{dcnn_config_version1}/trained_weights'
         with open(os.path.join(dcnn_save_path1, 'pred_weights.pkl'), 'rb') as f:
@@ -129,7 +128,9 @@ def pred_stability():
         print(st.spearmanr(pred_weights1[0].flatten(), pred_weights2[0].flatten()))
     
 
+
 if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]= f"-1"
-    between_zero_percent_and_hyperparams()
+    # between_zero_percent_and_hyperparams()
+    pred_stability()
 
