@@ -22,8 +22,8 @@ by iterating through a range of params.
 dcnn_base = 'vgg16'
 stimulus_sets = [1]
 learning_rates = [3e-3, 3e-4, 3e-5, 3e-6]
-# reg_strengths = [0.1, 0.01, 0.001, 0.0001, 1e-5, 1e-6, 1e-7, 0]
-reg_strengths = [3e-3, 5e-3, 7e-3]
+reg_strengths = [0.1, 0.01, 0.001, 0.0001, 1e-5, 1e-6, 1e-7, 0]
+# reg_strengths = [3e-3, 5e-3, 7e-3]
 low_attn_positions = 'block4_pool'
 train = 'finetune-with-lowAttn'
 layers = [f'{low_attn_positions}']
@@ -119,19 +119,19 @@ for stimulus_set in stimulus_sets:
             default_dict['heldout'] = heldout
             
             ###################################
-            run = 33  # reset or continue 
+            run = 1  # reset or continue 
             ###################################
             # hyper-params.
             # lr 
             # reg_strength
             for lr in learning_rates:
                 for reg_strength in reg_strengths:
-                    default_dict['finetune_run'] = run
+                    default_dict['finetune_run'] = f'{run}seed42'
                     default_dict['lr_finetune'] = lr
                     default_dict['reg_strength'] = reg_strength
 
                     if train == 'finetune-with-lowAttn':
-                        config_version = f'config_t{stimulus_set}.{dcnn_base}.{layer}.{heldout}.run{run}-with-lowAttn'
+                        config_version = f'config_t{stimulus_set}.{dcnn_base}.{layer}.{heldout}.run{run}seed42-with-lowAttn'
                     else:
                         config_version = f'config_t{stimulus_set}.{dcnn_base}.{layer}.{heldout}.run{run}'
 
