@@ -18,7 +18,6 @@ except ModuleNotFoundError:
 A database of all vision models
 """    
 
-
 def LayerWise_AttnOp(x, layer, config):
     """
     Apply attn to a specific layer. 
@@ -204,8 +203,6 @@ def model_base(
     # (where layer_begin directly connects to pred)
     elif train == 'finetune':
 
-        # print(f'[Check] train = {train}')
-
         if intermediate_input is False:
             output = PredLayer(layer_begin_reprs)  # flattened.
             model = Model(inputs=model.input, outputs=output)
@@ -221,15 +218,12 @@ def model_base(
             # output = PredLayer(x)
             # NOTE: confirmed that Reshape-Flatten will not cause problem.
 
-            # output = PredLayer(intermediate_input)
+            output = PredLayer(intermediate_input)
             model = Model(inputs=intermediate_input, outputs=output)
 
     # ----------------------------------------------------------------------
     # New integration with attn layers.
     elif train == 'finetune-with-lowAttn':
-
-        # print(f'[Check] train = {train}')
-
         attn_positions = config['low_attn_positions'].split(',')
         dcnn_layers = model.layers[1:]
         fake_inputs = []
@@ -300,8 +294,9 @@ def model_base(
 
 if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]= "-1"
-
-    config_version = 'config_t1.vgg16.block4_pool.None.run1-with-lowAttn'
+    config = load_config(
+        'config_t1.vgg16.block4_pool.None.run1-with-lowAttn'
+    )
     model, _, _ = model_base(
         config,
         intermediate_input=True
