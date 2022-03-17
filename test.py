@@ -50,7 +50,7 @@ def between_zero_percent_and_hyperparams():
         range(len(all_zero_percent)),
         np.array(all_zero_percent)[order]
     )
-    ax[0].set_xlabel('L1 strength')
+    ax[0].set_xlabel('L1 strength (log scale)')
     ax[0].set_ylabel('percentage zero')
     ax[0].set_xticks(np.arange(len(all_reg_strength)))
     all_reg_strength[np.where(all_reg_strength == 0)[0]] = 1e-16  # avoid div by 0.
@@ -68,7 +68,7 @@ def between_zero_percent_and_hyperparams():
         range(len(all_zero_percent)), 
         np.array(all_zero_percent)[order]
     )
-    ax[1].set_xlabel('learning rate')
+    ax[1].set_xlabel('learning rate (log scale)')
     ax[1].set_ylabel('percentage zero')
     ax[1].set_xticks(np.arange(len(all_lr_finetune)))
     ax[1].set_xticklabels(all_lr_finetune)
@@ -131,6 +131,6 @@ def pred_stability():
 
 if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"]= f"-1"
-    # between_zero_percent_and_hyperparams()
-    pred_stability()
+    between_zero_percent_and_hyperparams()
+    # pred_stability()
 
