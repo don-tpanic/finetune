@@ -14,7 +14,7 @@ by iterating through a range of params.
 run = 1
 lr = 0.003        # 3e-3
 model_name = 'vgg16'
-stimulus_sets = [1, 2, 3, 4, 5, 6]
+stimulus_sets = [0]
 
 dict_task1to5 = {'config_version': None,
                 'model_name': model_name,
