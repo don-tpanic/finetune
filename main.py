@@ -14,6 +14,7 @@ import data
 import train
 import evaluations
 from utils import load_config
+import utils
 
 """
 One script does it all.
@@ -24,6 +25,31 @@ One script does it all.
     3. Evaluate the trained model.
         -- evaluations.py
 """
+
+
+def main_across_targets(stimulus_set, model_name, layer, run, args, full_test, heldout_test):
+    """
+    Wrapper for multiGPU training, one layer per GPU.
+    For each layer, need to iterate through all heldouts.
+    """
+    if stimulus_set not in [6, '6']:
+        heldouts = ['000', '001', '010', '011',
+                    '100', '101', '110', '111', None]
+    else:
+        heldouts = ['0000', '0001', '0010', '0011',
+                    '0100', '0101', '0110', '0111',
+                    '1000', '1001', '1010', '1011',
+                    '1100', '1101', '1110', '1111', None]
+    for heldout in heldouts:
+        config_version = f't{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}'
+        print(f'[Check] main running {config_version}')
+        main(
+            config_version=config_version, 
+            mode=args.mode,
+            full_test=full_test,
+            heldout_test=heldout_test
+        )
+
 
 def main(config_version, mode, full_test, heldout_test):
     """
@@ -64,60 +90,61 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--mode', dest='mode')
     parser.add_argument('--task', dest='task')
-    parser.add_argument('--gpu', dest='gpu_index')
     args = parser.parse_args()
-    os.environ["CUDA_VISIBLE_DEVICES"]= f"{args.gpu_index}"
 
+    start_time = time.time()
     # -------------------------------------------------------
     stimulus_sets = [args.task]
-    runs = [4]
-    layers = ['fc2', 'flatten', 'block5_conv3', 'block5_conv2', 'block5_conv1', 'block4_pool', 'block3_pool']
+    runs = [1]
+    # layers = ['fc2', 'flatten', 'block5_conv3', 'block5_conv2', 'block5_conv1', 'block4_pool', 'block3_pool']
+    layers = ["block4_pool"]
     model_name = 'vgg16'
+    cuda_id_list = [0, 1, 2, 3, 4, 5, 6, 7]
     # -------------------------------------------------------
 
     for stimulus_set in stimulus_sets:
 
         for run in runs:
-            # get sum of runtime for all heldouts per layer
-            layer_runtime_collector = []
-
             # for eval easy comparison.
             full_test = defaultdict(list)
             heldout_test = defaultdict(list)
-            
-            for layer in layers:
-                # restart timer for a new layer
-                start_time = time.time()
 
-                if stimulus_set not in [6, '6']:
-                    heldouts = ['000', '001', '010', '011',
-                                '100', '101', '110', '111', None]
-                else:
-                    heldouts = ['0000', '0001', '0010', '0011',
-                                '0100', '0101', '0110', '0111',
-                                '1000', '1001', '1010', '1011',
-                                '1100', '1101', '1110', '1111', None]
-                for heldout in heldouts:
-                    config_version = f't{stimulus_set}.{model_name}.{layer}.{heldout}.run{run}'
-                    print(f'[Check] training {config_version}')
-                    main(
-                        config_version=config_version, 
-                        mode=args.mode,
-                        full_test=full_test,
-                        heldout_test=heldout_test
-                    )
-                    
-                if args.mode == 'train':
-                    end_time = time.time()
-                    # in hrs.
-                    duration = (end_time - start_time) / 3600.
-                    layer_runtime_collector.append(duration)
-                    
-                    np.save(
-                        f'results/{model_name}/config_{config_version}/{layer}_runtime_collector.npy', 
-                        layer_runtime_collector
-                    )
+            # Enable multiGPU training (one layer per GPU)
+            if args.mode == "train":
+                args_list = []
+                for layer in layers:
+                    single_entry = {}
+                    single_entry['stimulus_set'] = stimulus_set
+                    single_entry['model_name'] = model_name
+                    single_entry['layer'] = layer
+                    single_entry['run'] = run
+                    single_entry['args'] = args
+                    single_entry['full_test'] = full_test
+                    single_entry['heldout_test'] = heldout_test
+                    args_list.append(single_entry)
                 
+                print(f"args_list:\n{args_list}")
+                print(f"len(args_list): {len(args_list)}")
+                utils.cuda_manager(
+                    main_across_targets, args_list, cuda_id_list
+                )
+            
+            # If eval, just use one GPU.
+            elif args.mode == "eval":
+                os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+                for layer in layers:
+                    main_across_targets(
+                        stimulus_set, 
+                        model_name, 
+                        layer,
+                        run, 
+                        args, 
+                        full_test, 
+                        heldout_test
+                    )
+            else:
+                raise ValueError(f'Unknown mode: {args.mode}')
+
             if args.mode == 'eval':
                 for layer in layers:
                     print(
@@ -125,3 +152,5 @@ if __name__ == '__main__':
                         f'full=[{np.mean(full_test[layer]):.4f}], ' \
                         f'heldout=[{np.mean(heldout_test[layer]):.4f}]'
                     )
+    
+    print(f'Total time: {time.time() - start_time:.2f}s')
