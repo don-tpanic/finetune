@@ -126,7 +126,9 @@ def save_processed_data(model, config,
     # The layer output of the original 8 stimuli (preprocessed)
     # We want to include them into total samples.
     x_orig, _ = produce_orig_reprs(
-                            model=model, 
+                            model=model,
+                            model_name=model_name,
+                            layer=config['layer'],
                             preprocess_func=preprocess_func,
                             stimulus_set=config['stimulus_set'],
                             return_images=return_images)
@@ -143,14 +145,26 @@ def save_processed_data(model, config,
     # Each augmented images/reprs then in order saved in folders.
     for seed in seeds:
         print(f'[Check] generator grabs seed[{seed}]')
-        datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+
+        if model_name == 'vit_b16':
+            from utils import ViT_ImageDataGenerator
+            datagen_func = ViT_ImageDataGenerator
+            # ViT does not support rotation and shear.
+            rotation_range = None
+            shear_range = None
+        else:
+            datagen_func = tf.keras.preprocessing.image.ImageDataGenerator
+            rotation_range = augmentations['rotate_range']
+            shear_range = augmentations['shear_range']
+
+        datagen = datagen_func(
             zca_whitening=False,
             zca_epsilon=1e-06,
-            rotation_range=augmentations['rotate_range'],
+            rotation_range=rotation_range,
             width_shift_range=0.0,
             height_shift_range=0.0,
             brightness_range=None,
-            shear_range=augmentations['shear_range'],
+            shear_range=shear_range,
             zoom_range=0.0,
             channel_shift_range=0.0,
             fill_mode="nearest",
@@ -159,9 +173,10 @@ def save_processed_data(model, config,
             vertical_flip=augmentations['vertical_flip'],
             rescale=None,
             preprocessing_function=preprocess_func,
-            data_format=None,
             validation_split=0.0,
-            dtype=None)
+            dtype=None
+        )
+
         # load in the original stimuli and ready for augmentations.
         generator = datagen.flow_from_directory(
                 f'stimuli/original/task{stimulus_set}',
@@ -184,8 +199,19 @@ def save_processed_data(model, config,
             # x = model.predict(generator)
             
             images, y = next(generator)  # NOTE(ken) confirmed match
-            x = model(images)
-            
+
+            if model_name == 'vit_b16':
+                layer_index = int(layer[6:])
+                x = model(
+                        images, training=False, output_hidden_states=True
+                    ).hidden_states[layer_index].numpy()
+                # Need to flatten the non-batch dimensions as
+                # we defer layer output in data pipeline instead
+                # of in models.py
+                x = x.reshape(x.shape[0], -1)
+            else:
+                x = model(images)
+
             ftype = f'{layer}_reprs'
 
         elif save_as_imgs:

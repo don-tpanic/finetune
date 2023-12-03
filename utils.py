@@ -28,7 +28,7 @@ def load_config(config_version):
     return config
 
 
-def produce_orig_reprs(model, preprocess_func, stimulus_set, return_images=False):
+def produce_orig_reprs(model, model_name, layer, preprocess_func, stimulus_set, return_images=False):
     """
     Purpose:
     --------
@@ -38,6 +38,8 @@ def produce_orig_reprs(model, preprocess_func, stimulus_set, return_images=False
     inputs:
     -------
         model: A specified model capped at some layer
+        model_name: vgg16 / vgg19 / vit_b16
+        layer: the layer to intercept representations from
         preprocess_func: Model-specific preprocessing routine
         stimulus_set: ..
         return_images: default False (return model predictions)
@@ -65,16 +67,44 @@ def produce_orig_reprs(model, preprocess_func, stimulus_set, return_images=False
                 batch_size=batch_size)
 
     # this loads model-specific processed images.
-    datagen = tf.keras.preprocessing.image.ImageDataGenerator(
-                preprocessing_function=preprocess_func)
+    if model_name == 'vit_b16':
+        from utils import ViT_ImageDataGenerator
+        datagen = ViT_ImageDataGenerator(
+                    preprocessing_function=preprocess_func)
+    else:
+        datagen = tf.keras.preprocessing.image.ImageDataGenerator(
+                    preprocessing_function=preprocess_func)
+
     generator = datagen.flow_from_directory(
             data_dir,
             target_size=(224, 224),
             batch_size=batch_size,
             class_mode='sparse',
             shuffle=False)
-    if return_images is False: 
-        reprs = model.predict(generator)
+    
+    if return_images is False:
+        if model_name == 'vit_b16':
+            # 'layer_x'[6:] = 'x'
+            layer_index = int(layer[6:])
+            # Iterate over the generator to 
+            # collect the representations.
+            reprs = []
+            for i in range(len(generator)):
+                x, y = next(generator)  # x -> (8, 3, 224, 224)
+                layer_reprs = model(
+                    x, training=False, output_hidden_states=True
+                ).hidden_states[layer_index].numpy()  # (8, 197, 768)
+
+                # Need to flatten the non-batch dimensions as
+                # we defer layer output in data pipeline instead
+                # of in models.py
+                layer_reprs = layer_reprs.reshape(x.shape[0], -1)
+                reprs.append(layer_reprs)
+
+            # vstack to reduce the generator step dimension.
+            reprs = np.vstack(reprs)
+        else:
+            reprs = model.predict(generator)
     else:
         reprs, _ = next(generator)
 
@@ -527,6 +557,67 @@ def cuda_child(target, args_queue, available_cuda, shared_exception, sema):
     except Exception as e:
         shared_exception.put(e)
         
+
+class ViT_ImageDataGenerator(tf.keras.preprocessing.image.ImageDataGenerator):
+    def __init__(self, **kwargs):
+        super().__init__(**kwargs)
+        self.data_format = 'channels_first'
+
+    def standardize(self, x):
+        """Applies the normalization configuration in-place to a batch of inputs.
+
+        `x` is changed in-place since the function is mainly used internally
+        to standardize images and feed them to your network. If a copy of `x`
+        would be created instead it would have a significant performance cost.
+        If you want to apply this method without changing the input in-place
+        you can call the method creating a copy before:
+
+        standardize(np.copy(x))
+
+        # Arguments
+            x: Batch of inputs to be normalized.
+
+        # Returns
+            The inputs, normalized.
+        """
+        if self.preprocessing_function:
+            x = self.preprocessing_function(x, return_tensors="tf")['pixel_values']
+        if self.rescale:
+            x *= self.rescale
+        if self.samplewise_center:
+            x -= np.mean(x, keepdims=True)
+        if self.samplewise_std_normalization:
+            x /= (np.std(x, keepdims=True) + 1e-6)
+
+        if self.featurewise_center:
+            if self.mean is not None:
+                x -= self.mean
+            else:
+                warnings.warn('This ImageDataGenerator specifies '
+                              '`featurewise_center`, but it hasn\'t '
+                              'been fit on any training data. Fit it '
+                              'first by calling `.fit(numpy_data)`.')
+        if self.featurewise_std_normalization:
+            if self.std is not None:
+                x /= (self.std + 1e-6)
+            else:
+                warnings.warn('This ImageDataGenerator specifies '
+                              '`featurewise_std_normalization`, '
+                              'but it hasn\'t '
+                              'been fit on any training data. Fit it '
+                              'first by calling `.fit(numpy_data)`.')
+        if self.zca_whitening:
+            if self.principal_components is not None:
+                flatx = np.reshape(x, (-1, np.prod(x.shape[-3:])))
+                whitex = np.dot(flatx, self.principal_components)
+                x = np.reshape(whitex, x.shape)
+            else:
+                warnings.warn('This ImageDataGenerator specifies '
+                              '`zca_whitening`, but it hasn\'t '
+                              'been fit on any training data. Fit it '
+                              'first by calling `.fit(numpy_data)`.')
+        return x
+    
 
 if __name__ == '__main__':
     pass
