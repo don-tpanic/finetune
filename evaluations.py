@@ -15,6 +15,7 @@ from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Input, Dense, Flatten
 
 from utils import load_config, data_loader, produce_orig_reprs
+from models import model_base
 
 """
 Post-finetune evaluations
@@ -50,49 +51,98 @@ def original_stimuli_final_coordinates(config):
     stimulus_set = config['stimulus_set']
     layer = config['layer']
 
-    if model_name == 'vgg16':
-        model = tf.keras.applications.VGG16(
-                weights='imagenet', include_top=True, input_shape=(224, 224, 3))
-        preprocess_func = tf.keras.applications.vgg16.preprocess_input
-        
-    elif model_name == 'vgg19':
-        model = tf.keras.applications.VGG19(
-                weights='imagenet', include_top=True, input_shape=(224, 224, 3))
-        preprocess_func = tf.keras.applications.vgg19.preprocess_input
-        
-    # intercept pretrained model at some layer
-    layer_reprs = model.get_layer(layer).output
-    if layer not in ['flatten', 'fc1', 'fc2']:
-        layer_reprs = Flatten()(layer_reprs)
+    if model_name != 'vit_b16':
+        if model_name == 'vgg16':
+            model = tf.keras.applications.VGG16(
+                    weights='imagenet', include_top=True, input_shape=(224, 224, 3))
+            preprocess_func = tf.keras.applications.vgg16.preprocess_input
+            
+        elif model_name == 'vgg19':
+            model = tf.keras.applications.VGG19(
+                    weights='imagenet', include_top=True, input_shape=(224, 224, 3))
+            preprocess_func = tf.keras.applications.vgg19.preprocess_input
+            
+        # intercept pretrained model at some layer
+        layer_reprs = model.get_layer(layer).output
+        if layer not in ['flatten', 'fc1', 'fc2']:
+            layer_reprs = Flatten()(layer_reprs)
 
-    if config['stimulus_set'] not in ['6', 6]:
-        final_layer_units = 3
-    else:
-        final_layer_units = 4
+        if config['stimulus_set'] not in ['6', 6]:
+            final_layer_units = 3
+        else:
+            final_layer_units = 4
 
-    # stitch a new prediction layer on top of penult.
-    pred_out = tf.keras.layers.Dense(
-        final_layer_units, 
-        activation=config['actv_func'], 
-        name='pred'
-    )(layer_reprs)
-    model = tf.keras.Model(inputs=model.input, outputs=pred_out)
+        # stitch a new prediction layer on top of penult.
+        pred_out = tf.keras.layers.Dense(
+            final_layer_units, 
+            activation=config['actv_func'], 
+            name='pred'
+        )(layer_reprs)
+        model = tf.keras.Model(inputs=model.input, outputs=pred_out)
 
-    # load the trained prediction layer weights and sub in.
-    save_path = f'results/{model_name}/{config_version}/trained_weights'
-    if config['train'] == 'finetune':
-        with open(os.path.join(save_path, 'pred_weights.pkl'), 'rb') as f:
-            pred_weights = pickle.load(f)
-        model.get_layer('pred').set_weights(pred_weights)
-        print(f'[Check] pred_weights loaded.')
+        # load the trained prediction layer weights and sub in.
+        save_path = f'results/{model_name}/{config_version}/trained_weights'
+        if config['train'] == 'finetune':
+            with open(os.path.join(save_path, 'pred_weights.pkl'), 'rb') as f:
+                pred_weights = pickle.load(f)
+            model.get_layer('pred').set_weights(pred_weights)
+            print(f'[Check] pred_weights loaded.')
 
-    # Load original images and grab reprs
-    # (n, d) e.g. (8, 3) or (16, 4)
-    reprs, _ = produce_orig_reprs(
-        model=model, 
-        preprocess_func=preprocess_func,
-        stimulus_set=stimulus_set)
+        # Load original images and grab reprs
+        # (n, d) e.g. (8, 3) or (16, 4)
+        reprs, _ = produce_orig_reprs(
+            model=model, 
+            preprocess_func=preprocess_func,
+            stimulus_set=stimulus_set)
     
+    elif model_name == 'vit_b16':
+        # Due to how ViT is setup, we have to load the model twice.
+        # Once to get intermediate reprs, and once to load the
+        # finetuned pred weights to get final outputs.
+
+        # First produce the layer reprs (images->intermediate reprs) 
+        model, _, preprocess_func = model_base(
+            model_name=config['model_name'], 
+            layer=config['layer'], 
+            train='none',
+        )
+        
+        reprs, _ = produce_orig_reprs(
+            model=model, 
+            model_name=config['model_name'],
+            layer=config['layer'],
+            preprocess_func=preprocess_func,
+            stimulus_set=stimulus_set
+        )
+
+        del model
+        K.clear_session()
+
+        # Second load the layer->output model
+        model, input_shape, _ = model_base(
+            model_name=config['model_name'], 
+            actv_func=config['actv_func'],
+            kernel_constraint=config['kernel_constraint'],
+            kernel_regularizer=config['kernel_regularizer'],
+            hyperbolic_strength=config['hyperbolic_strength'],
+            lr=config['lr'],
+            train=config['train'],
+            stimulus_set=config['stimulus_set'],
+            layer=config['layer'],
+            intermediate_input=True
+        )
+
+        # Swap in the finetuned pred weights.
+        save_path = f'results/{model_name}/{config_version}/trained_weights'
+        if config['train'] == 'finetune':
+            with open(os.path.join(save_path, 'pred_weights.pkl'), 'rb') as f:
+                pred_weights = pickle.load(f)
+            model.get_layer('pred').set_weights(pred_weights)
+            print(f'[Check] pred_weights loaded.')
+        
+        # Get final outputs (intermediate reprs->final outputs)
+        reprs = model.predict(reprs)
+        
     # release RAM
     del model
     K.clear_session()

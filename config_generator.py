@@ -13,7 +13,7 @@ by iterating through a range of params.
 # lr = 0.0003       # 3e-4
 run = 1
 lr = 0.003        # 3e-3
-model_name = 'vgg16'
+model_name = 'vit_b16'
 stimulus_sets = [0]
 
 dict_task1to5 = {'config_version': None,
@@ -72,9 +72,11 @@ dict_task6 = {'config_version': None,
                 'noise_mode': 'gaussian'
                 }
 
-layers = ['fc2', 'flatten', 
-        'block5_pool', 'block5_conv3', 'block5_conv2', 'block5_conv1',
-        'block4_pool', 'block3_pool']
+# layers = ['fc2', 'flatten', 
+#         'block5_pool', 'block5_conv3', 'block5_conv2', 'block5_conv1',
+#         'block4_pool', 'block3_pool']
+layers = ['layer_3', 'layer_6', 'layer_9', 'layer_12']
+
 heldouts_task1to5 = [None,
                     '000', '001', '010', '011',
                     '100', '101', '110', '111']

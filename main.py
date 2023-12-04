@@ -96,8 +96,10 @@ if __name__ == '__main__':
     # -------------------------------------------------------
     stimulus_sets = [args.task]
     runs = [1]
-    layers = ['fc2', 'flatten', 'block5_conv3', 'block5_conv2', 'block5_conv1', 'block4_pool', 'block3_pool']
-    model_name = 'vgg16'
+    # layers = ['fc2', 'flatten', 'block5_conv3', 'block5_conv2', 'block5_conv1', 'block4_pool', 'block3_pool']
+    # model_name = 'vgg16'
+    layers = ['layer_3', 'layer_6', 'layer_9', 'layer_12']
+    model_name = 'vit_b16'
     cuda_id_list = [0, 1, 2, 3, 4, 5, 6, 7]
     # -------------------------------------------------------
 
