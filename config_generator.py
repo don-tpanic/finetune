@@ -75,7 +75,7 @@ dict_task6 = {'config_version': None,
 # layers = ['fc2', 'flatten', 
 #         'block5_pool', 'block5_conv3', 'block5_conv2', 'block5_conv1',
 #         'block4_pool', 'block3_pool']
-layers = ['layer_3', 'layer_6', 'layer_9', 'layer_12']
+layers = ['layer_3_msa', 'layer_6_msa', 'layer_9_msa', 'layer_12_msa']
 
 heldouts_task1to5 = [None,
                     '000', '001', '010', '011',

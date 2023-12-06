@@ -201,9 +201,19 @@ def save_processed_data(model, config,
             images, y = next(generator)  # NOTE(ken) confirmed match
 
             if model_name == 'vit_b16':
-                layer_index = int(layer[6:])
-                x = model(
-                        images, training=False, output_hidden_states=True
+                layer_index = int(layer[6:7])  # `layer_x_..`
+                if 'msa' in layer:
+                    # Grabs the MSA outputs 
+                    # \in  (bs, seq_len, num_heads, head_dim)
+                    # e.g. (1,  197,    12,         64)
+                    x = model(
+                        images, training=False, 
+                        output_msa_states=True
+                    ).attentions[layer_index].numpy()
+                else:
+                    x = model(
+                        images, training=False, 
+                        output_hidden_states=True
                     ).hidden_states[layer_index].numpy()
                 # Need to flatten the non-batch dimensions as
                 # we defer layer output in data pipeline instead

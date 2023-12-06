@@ -75,7 +75,7 @@ def model_base(model_name,
         layer_reprs = model.get_layer(layer).output
     
     elif model_name == 'vit_b16':
-        from transformers import AutoImageProcessor, TFViTModel
+        from transformers_custom import AutoImageProcessor, TFViTModel
         model = TFViTModel.from_pretrained(
             'google/vit-base-patch16-224-in21k',
             cache_dir='model_zoo/vit_b16'
@@ -208,10 +208,21 @@ def model_base(model_name,
                 synthetic_input = tf.random.uniform(
                     (1, 3, 224, 224), minval=0, maxval=1
                 )
-                layer_index = int(layer[6:])
-                layer_reprs = model(
-                    synthetic_input, training=False, output_hidden_states=True
-                ).hidden_states[layer_index].numpy()
+                layer_index = int(layer[6:7])  # `layer_x_..`
+                if 'msa' in layer:
+                    # Grabs the MSA outputs 
+                    # \in  (bs, seq_len, num_heads, head_dim)
+                    # e.g. (1,  197,    12,         64)
+                    layer_reprs = model(
+                        synthetic_input, training=False, 
+                        output_msa_states=True
+                    ).attentions[layer_index].numpy()
+                else:
+                    layer_reprs = model(
+                        synthetic_input, training=False, 
+                        output_hidden_states=True
+                    ).hidden_states[layer_index].numpy()
+
                 # Flatten the non-batch dimensions
                 layer_reprs = layer_reprs.reshape(
                     layer_reprs.shape[0], -1
