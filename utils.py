@@ -84,16 +84,26 @@ def produce_orig_reprs(model, model_name, layer, preprocess_func, stimulus_set, 
     
     if return_images is False:
         if model_name == 'vit_b16':
-            # 'layer_x'[6:] = 'x'
-            layer_index = int(layer[6:])
+            # `layer_x_..`
+            layer_index = int(layer[6:7])
             # Iterate over the generator to 
             # collect the representations.
             reprs = []
             for i in range(len(generator)):
                 x, y = next(generator)  # x -> (8, 3, 224, 224)
-                layer_reprs = model(
-                    x, training=False, output_hidden_states=True
-                ).hidden_states[layer_index].numpy()  # (8, 197, 768)
+                if 'msa' in layer:
+                    # Grabs the MSA outputs 
+                    # \in  (bs, seq_len, num_heads, head_dim)
+                    # e.g. (8,  197,    12,         64)
+                    layer_reprs = model(
+                        x, training=False, 
+                        output_msa_states=True
+                    ).attentions[layer_index].numpy()
+                else:
+                    layer_reprs = model(
+                        x, training=False, 
+                        output_hidden_states=True
+                    ).hidden_states[layer_index].numpy()
 
                 # Need to flatten the non-batch dimensions as
                 # we defer layer output in data pipeline instead
